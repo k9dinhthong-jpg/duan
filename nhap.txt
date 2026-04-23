@@ -1,0 +1,130 @@
+  
+          <section className="main-bottom">
+            <div className="product">
+              <div className="product-hitachi">
+                <h2>HITACHI</h2>
+                <nav>
+                  <ul className="list-item">
+                    <li>
+                      <img
+                        src="./assets/img/Product/hitachi/hitachi.png"
+                        alt=""
+                      />
+                      <a href="#">Xem chi tiết</a>
+                    </li>
+                    <li>
+                      <img
+                        src="./assets/img/Product/hitachi/hitachi.png"
+                        alt=""
+                      />
+                      <a href="#">Xem chi tiết</a>
+                    </li>
+                    <li>
+                      <img
+                        src="./assets/img/Product/hitachi/hitachi.png"
+                        alt=""
+                      />
+                      <a href="#">Xem chi tiết</a>
+                    </li>
+                    <li>
+                      <img
+                        src="./assets/img/Product/hitachi/hitachi.png"
+                        alt=""
+                      />
+                      <a href="#">Xem chi tiết</a>
+                    </li>
+                  </ul>
+                  <button type="button" className="view-all-btn">
+                    <span className="btn-text">Xem tất cả</span>
+                    <span className="btn-arrow">
+                      <i className="fa-solid fa-arrow-right"></i>
+                    </span>
+                  </button>
+                </nav>
+              </div>
+              <div className="product-kobelco">
+                <h2>KOBELCO</h2>
+                <nav>
+                  <ul className="list-item">
+                    <li>
+                      <img
+                        src="./assets/img/Product/kobelco/kobelco.png"
+                        alt=""
+                      />
+                      <a href="#">Xem chi tiết</a>
+                    </li>
+                    <li>
+                      <img
+                        src="./assets/img/Product/kobelco/kobelco.png"
+                        alt=""
+                      />
+                      <a href="#">Xem chi tiết</a>
+                    </li>
+                    <li>
+                      <img
+                        src="./assets/img/Product/kobelco/kobelco.png"
+                        alt=""
+                      />
+                      <a href="#">Xem chi tiết</a>
+                    </li>
+                    <li>
+                      <img
+                        src="./assets/img/Product/kobelco/kobelco.png"
+                        alt=""
+                      />
+                      <a href="#">Xem chi tiết</a>
+                    </li>
+                  </ul>
+                  <button type="button" className="view-all-btn">
+                    <span className="btn-text">Xem tất cả</span>
+                    <span className="btn-arrow">
+                      <i className="fa-solid fa-arrow-right"></i>
+                    </span>
+                  </button>
+                </nav>
+              </div>
+              <div className="product-komatsu">
+                <h2>KOMATSU</h2>
+                <nav>
+                  <ul className="list-item">
+                    <li>
+                      <img
+                        src="./assets/img/Product/komatsu/komatsu.png"
+                        alt=""
+                      />
+                      <a href="#">Xem chi tiết</a>
+                    </li>
+                    <li>
+                      <img
+                        src="./assets/img/Product/komatsu/komatsu.png"
+                        alt=""
+                      />
+                      <a href="#">Xem chi tiết</a>
+                    </li>
+                    <li>
+                      <img
+                        src="./assets/img/Product/komatsu/komatsu.png"
+                        alt=""
+                      />
+                      <a href="#">Xem chi tiết</a>
+                    </li>
+                    <li>
+                      <img
+                        src="./assets/img/Product/komatsu/komatsu.png"
+                        alt=""
+                      />
+                      <a href="#">Xem chi tiết</a>
+                    </li>
+                  </ul>
+                  <button type="button" className="view-all-btn">
+                    <span className="btn-text">Xem tất cả</span>
+                    <span className="btn-arrow">
+                      <i className="fa-solid fa-arrow-right"></i>
+                    </span>
+                  </button>
+                </nav>
+              </div>
+            </div>
+            
+            
+          </section>

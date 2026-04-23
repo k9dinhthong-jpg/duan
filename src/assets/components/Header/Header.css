@@ -1,0 +1,183 @@
+:root {
+  --site-nav-gap: 5vw;
+}
+
+/* Noi dung banner */
+.header-banner {
+  display: grid;
+  grid-template-columns: 50% 50%;
+  align-items: center;
+  background-color: #000000;
+  color: #ffffff;
+  padding: 0.8vw 4.5vw;
+}
+
+.banner-left {
+  font-size: 1.5vw;
+  text-align: left;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.banner-right {
+  font-size: 1.5vw;
+  text-align: right;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* Noi dung thanh dieu huong site-nav */
+.site-nav {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  background-color: #ffffff;
+  box-shadow:
+    0 0.32vw 0.63vw rgba(0, 0, 0, 0.08),
+    0 0.74vw 1.47vw rgba(0, 0, 0, 0.06),
+    0 0 0 0.06vw rgba(0, 0, 0, 0.04);
+  transition: top 0.2s ease;
+}
+
+.site-nav.sticky {
+  top: 0;
+}
+
+.nav-menu {
+  text-align: center;
+  display: grid;
+  grid-template-columns: repeat(7, auto);
+  gap: 4vw;
+  align-items: center;
+}
+
+.nav-menu > li > a,
+.nav-menu > li > a:visited {
+  color: #000000;
+  text-decoration: none;
+}
+
+.nav-menu > li {
+  position: relative;
+}
+
+.nav-menu > li > a {
+  font-size: 1vw;
+  font-weight: 600;
+}
+
+.product-menu > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.02vw;
+  padding: 1.3vw;
+}
+
+.product-menu > a svg {
+  font-size: 0.9em;
+  line-height: 1;
+  transform: translateY(-0.04em);
+}
+
+.product-menu-item {
+  position: absolute;
+  top: 100%;
+  left: -35%;
+  min-width: 15vw;
+  margin-top: 0;
+  padding: 0;
+  background: #5f6ca3;
+  border-radius: 0;
+  box-shadow: 0 0.4vw 1vw rgba(0, 0, 0, 0.12);
+  text-align: left;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(0);
+  transition:
+    opacity 0.2s ease,
+    visibility 0.2s ease;
+  z-index: 1200;
+  pointer-events: none;
+}
+
+.product-menu-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -0.8vw;
+  height: 0.8vw;
+}
+
+.product-menu-item li + li {
+  border-top: 1px solid #ffffff;
+}
+
+.product-menu-item li a {
+  display: block;
+  padding: 0.7vw 1vw;
+  white-space: nowrap;
+  color: #ffffff;
+  text-align: center;
+}
+
+.product-menu-item li a:hover {
+  background: #53609a;
+}
+
+.product-menu:hover .product-menu-item {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.search-item {
+  padding: 0;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.45vw;
+  width: 13vw;
+  min-width: clamp(180px, 11vw, 210px);
+  padding: 0.38vw 0.72vw;
+  border: 1px solid #d7dce5;
+  border-radius: 999px;
+  background: #f7f9fc;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.search-box:focus-within {
+  border-color: #5f6ca3;
+  background: #ffffff;
+  box-shadow: 0 0 0 clamp(2px, 0.16vw, 3px) rgba(95, 108, 163, 0.15);
+}
+
+.search-icon {
+  color: #7a8196;
+  font-size: 0.86vw;
+  min-width: clamp(12px, 0.75vw, 14px);
+}
+
+.find-text {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: #1f2430;
+  font-size: 0.86vw;
+  font-weight: 500;
+  outline: none;
+}
+
+.find-text::placeholder {
+  color: #9aa3b2;
+}
