@@ -1,0 +1,41 @@
+{
+  "groupTitle": "MÁY CÔNG TRÌNH KOMATSU",
+  "products": [
+    {
+      "id": "Komatsu01",
+      "name": "Máy xúc đào Komatsu PC200-8",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "image": "/img/Product/Komatsu/Komatsu01.png",
+      "alt": "Komatsu"
+    },
+    {
+      "id": "Komatsu02",
+      "name": "Máy xúc đào Komatsu PC300-8",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "image": "/img/Product/Komatsu/Komatsu02.png",
+      "alt": "Komatsu"
+    },
+    {
+      "id": "Komatsu03",
+      "name": "Máy xúc đào Komatsu PC400-8",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "image": "/img/Product/Komatsu/Komatsu03.png",
+      "alt": "Komatsu"
+    },
+    {
+      "id": "Komatsu04",
+      "name": "Máy xúc đào Komatsu PC500-8",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "image": "/img/Product/Komatsu/Komatsu04.png",
+      "alt": "Komatsu"
+    }
+  ]
+}

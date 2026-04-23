@@ -1,0 +1,20 @@
+[
+    {
+      "id": "Featured01",
+      "title": "Tốp 5 chiếc máy KOBELCO bán chạy nhất",
+      "content": "Bài viết này sẽ giới thiệu về 5 chiếc máy KOBELCO bán chạy nhất trên thị trường hiện nay. Những chiếc máy này được đánh giá cao về hiệu suất, độ bền và tính năng tiên tiến, đáp ứng nhu cầu của các công trình xây dựng và khai thác mỏ. Hãy cùng tìm hiểu về những chiếc máy KOBELCO nổi bật này và lý do tại sao chúng lại được ưa chuộng đến vậy.",
+      "image": "/img/FeaturedNews/Feature01.png"
+    },
+    {
+      "id": "Featured02",
+      "title": "Tốp 5 chiếc máy KOMATSU bán chạy nhất",
+      "content": "Bài viết này sẽ giới thiệu về 5 chiếc máy KOMATSU bán chạy nhất trên thị trường hiện nay. Những chiếc máy này được đánh giá cao về hiệu suất, độ bền và tính năng tiên tiến, đáp ứng nhu cầu của các công trình xây dựng và khai thác mỏ. Hãy cùng tìm hiểu về những chiếc máy KOMATSU nổi bật này và lý do tại sao chúng lại được ưa chuộng đến vậy.",
+        "image": "/img/FeaturedNews/Feature02.png"
+    },
+    {
+      "id": "Featured03",
+      "title": "Tốp 5 chiếc máy HITACHI bán chạy nhất",
+      "content": "Bài viết này sẽ giới thiệu về 5 chiếc máy HITACHI bán chạy nhất trên thị trường hiện nay. Những chiếc máy này được đánh giá cao về hiệu suất, độ bền và tính năng tiên tiến, đáp ứng nhu cầu của các công trình xây dựng và khai thác mỏ. Hãy cùng tìm hiểu về những chiếc máy HITACHI nổi bật này và lý do tại sao chúng lại được ưa chuộng đến vậy.",
+      "image": "/img/FeaturedNews/Feature03.png"
+    }
+  ]
