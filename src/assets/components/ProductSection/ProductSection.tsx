@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { FaArrowRight } from "react-icons/fa";
 import "./ProductSection.css";
+import { toPublicPath } from "../../../utils/publicPath";
 
 type ProductItem = {
   id: string;
@@ -31,12 +32,14 @@ function ProductSection() {
   useEffect(() => {
     async function fetchProducts() {
       const files = [
-        "/data/Product-Hitachi.json",
-        "/data/Product-Kobelco.json",
-        "/data/Product-Komatsu.json",
+        "data/Product-Hitachi.json",
+        "data/Product-Kobelco.json",
+        "data/Product-Komatsu.json",
       ];
 
-      const responses = await Promise.all(files.map((file) => fetch(file)));
+      const responses = await Promise.all(
+        files.map((file) => fetch(toPublicPath(file))),
+      );
       const data = await Promise.all(
         responses.map((response) => response.json() as Promise<ProductGroup>),
       );
@@ -72,7 +75,7 @@ function ProductSection() {
               .map((product) => (
                 <div className="product-card" key={product.id}>
                   <div className="product-card-image-wrap">
-                    <img src={product.image} alt={product.alt} />
+                    <img src={toPublicPath(product.image)} alt={product.alt} />
                   </div>
                   <div className="product-card-content">
                     <h3 className="product-card-title">{product.name}</h3>

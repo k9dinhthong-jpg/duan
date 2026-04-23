@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import "./MainSlider.css";
+import { toPublicPath } from "../../../utils/publicPath";
 
 type Slider = {
   id: number;
@@ -16,7 +17,7 @@ function MainSlider() {
 
   useEffect(() => {
     async function getSlider() {
-      const response = await fetch("/data/slider.json");
+      const response = await fetch(toPublicPath("data/slider.json"));
       const data = await response.json();
       setDataSlider(data);
     }
@@ -93,7 +94,7 @@ function MainSlider() {
       >
         {dataSlider.map((item) => (
           <div className="slide-item" key={item.id}>
-            <img src={item.image} alt={item.alt} />
+            <img src={toPublicPath(item.image)} alt={item.alt} />
           </div>
         ))}
       </div>

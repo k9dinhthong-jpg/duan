@@ -1,4 +1,5 @@
 import "./IntroCompany.css";
+import { toPublicPath } from "../../../utils/publicPath";
 
 function IntroCompany() {
   return (
@@ -30,7 +31,10 @@ function IntroCompany() {
         </div>
 
         <div className="intro-company-right">
-          <img src="/img/IntroCompany/Company.png" alt="Máy xúc Hyundai" />
+          <img
+            src={toPublicPath("img/IntroCompany/Company.png")}
+            alt="Máy xúc Hyundai"
+          />
         </div>
       </div>
     </section>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import "./FeaturedNews.css";
+import { toPublicPath } from "../../../utils/publicPath";
 
 type FeaturedNewsItem = {
   id: string;
@@ -20,7 +21,7 @@ function FeaturedNews() {
   useEffect(() => {
     const loadFeaturedNews = async () => {
       try {
-        const response = await fetch("/data/Featured-New.json");
+        const response = await fetch(toPublicPath("data/Featured-New.json"));
         const data: FeaturedNewsItem[] = await response.json();
         setItems(data);
       } catch (error) {
@@ -65,7 +66,7 @@ function FeaturedNews() {
         {latestItems.map((item) => (
           <li key={item.id} className="featured-news-card">
             <img
-              src={item.image}
+              src={toPublicPath(item.image)}
               alt={item.title}
               className="featured-news-image"
             />
