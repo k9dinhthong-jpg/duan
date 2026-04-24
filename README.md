@@ -1,73 +1,38 @@
-# React + TypeScript + Vite
+# Thuận Phát Website
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Website giới thiệu máy công trình và dịch vụ kỹ thuật, xây dựng bằng React + TypeScript + Vite.
 
-Currently, two official plugins are available:
+## Chạy dự án
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Mặc định dùng HashRouter để tương thích GitHub Pages. Nếu deploy trên hạ tầng có rewrite route, có thể chuyển sang BrowserRouter:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+VITE_USE_HASH_ROUTER=false npm run dev
 ```
+
+## Scripts
+
+- `npm run dev`: chạy môi trường phát triển
+- `npm run build`: build production
+- `npm run preview`: preview bản build
+- `npm run lint`: kiểm tra eslint
+- `npm run test`: chạy unit test với Vitest
+- `npm run test:watch`: test watch mode
+- `npm run deploy`: deploy lên GitHub Pages
+
+## Cải tiến đã bổ sung
+
+- Lazy loading theo route (giảm tải bundle ban đầu)
+- Error Boundary cho fallback UI an toàn
+- SEO metadata cơ bản + metadata động theo route/bài viết
+- Web manifest (`public/site.webmanifest`)
+- Cải thiện điều hướng keyboard cho menu dropdown
+- CTA trang Product điều hướng thực tế sang trang chi tiết/liên hệ
+- Loading/error state khi tải dữ liệu sản phẩm
+- Tối ưu ảnh với `loading="lazy"` và `decoding="async"`
+- Thiết lập test + CI workflow (`.github/workflows/ci.yml`)

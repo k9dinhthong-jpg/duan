@@ -46,7 +46,9 @@ function News() {
         setIsLoading(true);
         setLoadError("");
 
-        const response = await fetch(toPublicPath("data/Featured-New.json"));
+        const response = await fetch(
+          toPublicPath("data/Featured-New/Featured-New.json"),
+        );
         if (!response.ok) {
           throw new Error("load-failed");
         }

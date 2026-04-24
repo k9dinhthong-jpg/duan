@@ -9,12 +9,15 @@ import {
 } from "react-icons/fa";
 import { FaTiktok } from "react-icons/fa6";
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import "./Footer.css";
 import { toPublicPath } from "../../../utils/publicPath";
 
 type CompanyData = {
   name?: string;
   shortName?: string;
+  taxCode?: string;
+  establishedYear?: string;
   phone?: string;
   address?: string;
   email?: string;
@@ -38,6 +41,8 @@ function Footer() {
   const [companyData, setCompanyData] = useState<CompanyData>({
     name: "Thuận Phát Máy Công Trình",
     shortName: "Thuận Phát Máy Công Trình",
+    taxCode: "Đang cập nhật",
+    establishedYear: "2020",
     phone: "0948 299 444",
     address: "Số 168 - Khu 4 - Xã Tề Lỗ - Tỉnh Phú Thọ",
     email: "k9dinhthong@gmail.com",
@@ -60,6 +65,8 @@ function Footer() {
           name: data.name?.trim() || prev.name,
           shortName:
             data.shortName?.trim() || data.name?.trim() || prev.shortName,
+          taxCode: data.taxCode?.trim() || prev.taxCode,
+          establishedYear: data.establishedYear?.trim() || prev.establishedYear,
           phone: data.phone?.trim() || prev.phone,
           address: data.address?.trim() || prev.address,
           email: data.email?.trim() || prev.email,
@@ -80,6 +87,13 @@ function Footer() {
     () => ensureHttp(companyData.website),
     [companyData.website],
   );
+  const currentYear = new Date().getFullYear();
+  const foundedYear = Number.parseInt(companyData.establishedYear ?? "", 10);
+  const copyrightYears = Number.isNaN(foundedYear)
+    ? `${currentYear}`
+    : foundedYear < currentYear
+      ? `${foundedYear} - ${currentYear}`
+      : `${foundedYear}`;
 
   return (
     <div className="site-footer">
@@ -111,6 +125,10 @@ function Footer() {
                 {companyData.website}
               </a>
             </li>
+            <li>
+              <FaAngleRight />
+              <span>MST: {companyData.taxCode}</span>
+            </li>
           </ul>
         </div>
 
@@ -120,23 +138,23 @@ function Footer() {
             <ul className="footer-link-list">
               <li>
                 <FaAngleRight />
-                <a href="#">Chính sách bảo mật</a>
+                <Link to="/policy/privacy">Chính sách bảo mật</Link>
               </li>
               <li>
                 <FaAngleRight />
-                <a href="#">Điều khoản sử dụng</a>
+                <Link to="/policy/terms">Điều khoản sử dụng</Link>
               </li>
               <li>
                 <FaAngleRight />
-                <a href="#">Chính sách bảo hành</a>
+                <Link to="/policy/warranty">Chính sách bảo hành</Link>
               </li>
               <li>
                 <FaAngleRight />
-                <a href="#">Chính sách thanh toán</a>
+                <Link to="/policy/payment">Chính sách thanh toán</Link>
               </li>
               <li>
                 <FaAngleRight />
-                <a href="#">Chính sách vận chuyển</a>
+                <Link to="/policy/shipping">Chính sách vận chuyển</Link>
               </li>
             </ul>
           </nav>
@@ -194,9 +212,10 @@ function Footer() {
       </section>
 
       <section className="footer-bottom">
-        <div>
-          Copyright © {companyData.shortName} 2026. All rights reserved.
-        </div>
+        <small>
+          © <time dateTime={`${currentYear}`}>{copyrightYears}</time>{" "}
+          {companyData.shortName}. Bảo lưu mọi quyền.
+        </small>
       </section>
     </div>
   );

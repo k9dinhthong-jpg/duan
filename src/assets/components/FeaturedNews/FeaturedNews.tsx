@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import { FaChevronRight } from "react-icons/fa";
+import { Link } from "react-router-dom";
 import "./FeaturedNews.css";
 import { toPublicPath } from "../../../utils/publicPath";
 
 type FeaturedNewsItem = {
   id: string;
+  slug?: string;
   title: string;
   content: string;
   image: string;
@@ -14,6 +17,15 @@ function getIdOrder(id: string): number {
   return match ? Number(match[1]) : -1;
 }
 
+function slugify(text: string) {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 function FeaturedNews() {
   const [items, setItems] = useState<FeaturedNewsItem[]>([]);
   const [itemsToShow, setItemsToShow] = useState(3);
@@ -21,7 +33,9 @@ function FeaturedNews() {
   useEffect(() => {
     const loadFeaturedNews = async () => {
       try {
-        const response = await fetch(toPublicPath("data/Featured-New.json"));
+        const response = await fetch(
+          toPublicPath("data/Featured-New/Featured-New.json"),
+        );
         const data: FeaturedNewsItem[] = await response.json();
         setItems(data);
       } catch (error) {
@@ -34,7 +48,7 @@ function FeaturedNews() {
 
   useEffect(() => {
     const getItemsToShow = (width: number): number => {
-      if (width >= 1400) return 3;
+      if (width >= 1440) return 3;
       if (width >= 1024) return 3;
       if (width >= 768) return 2;
       if (width <= 676) return 1;
@@ -69,14 +83,19 @@ function FeaturedNews() {
               src={toPublicPath(item.image)}
               alt={item.title}
               className="featured-news-image"
+              loading="lazy"
+              decoding="async"
             />
 
             <div className="featured-news-body">
               <h3 className="featured-news-item-title">{item.title}</h3>
               <p className="featured-news-item-desc">{item.content}</p>
-              <a href="#" className="featured-news-link">
-                Xem thêm <i className="fa-solid fa-chevron-right"></i>
-              </a>
+              <Link
+                to={`/news/${item.slug?.trim() || slugify(item.title)}`}
+                className="featured-news-link"
+              >
+                Xem thêm <FaChevronRight aria-hidden="true" />
+              </Link>
             </div>
           </li>
         ))}

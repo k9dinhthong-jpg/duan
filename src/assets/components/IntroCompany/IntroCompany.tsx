@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { FaArrowRight } from "react-icons/fa";
+import { Link } from "react-router-dom";
 import "./IntroCompany.css";
 import { toPublicPath } from "../../../utils/publicPath";
 
@@ -85,12 +87,12 @@ function IntroCompany() {
             các khách hàng khi ghé xem.
           </p>
 
-          <button type="button" className="intro-company-btn">
+          <Link to="/about-us" className="intro-company-btn">
             <span className="intro-company-btn-label">Tìm hiểu thêm</span>
             <span className="intro-company-btn-icon" aria-hidden="true">
-              <i className="fa-solid fa-arrow-right"></i>
+              <FaArrowRight />
             </span>
-          </button>
+          </Link>
         </div>
 
         <div className="intro-company-right">

@@ -119,11 +119,21 @@ td {
 }
 
 .container {
-  width: min(92vw, var(--container-max));
+  width: min(92vw, var(--container-max, 1170px));
   margin-inline: auto;
 }
 
 ::selection {
   color: #ffffff;
   background: rgba(77, 93, 159, 0.85);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }

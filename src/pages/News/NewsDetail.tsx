@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import "./News.css";
 import { toPublicPath } from "../../utils/publicPath";
+import { applySeo } from "../../utils/seo";
 
 type NewsItem = {
   id: string;
@@ -47,7 +48,9 @@ function NewsDetail() {
         setIsLoading(true);
         setLoadError("");
 
-        const response = await fetch(toPublicPath("data/Featured-New.json"));
+        const response = await fetch(
+          toPublicPath("data/Featured-New/Featured-New.json"),
+        );
         if (!response.ok) {
           throw new Error("load-failed");
         }
@@ -72,6 +75,16 @@ function NewsDetail() {
       }))
       .find((item) => item.slug === slug);
   }, [items, slug]);
+
+  useEffect(() => {
+    if (!article) return;
+
+    applySeo({
+      title: article.title,
+      description: article.content.slice(0, 150),
+      image: toPublicPath(article.image),
+    });
+  }, [article]);
 
   if (isLoading) {
     return (

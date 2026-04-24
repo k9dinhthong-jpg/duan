@@ -1,9 +1,20 @@
 .main-product-page .product-section {
-  width: min(94vw, 1600px);
+  width: min(94vw, 1200px);
   margin-inline: auto;
   display: grid;
   gap: clamp(18px, 1.5vw, 24px);
   overflow-x: clip;
+}
+
+.main-product-page .product-state {
+  margin: 0;
+  text-align: center;
+  font-weight: 600;
+  color: #273a67;
+}
+
+.main-product-page .product-state.is-error {
+  color: #b33232;
 }
 
 .main-product-page .product-group {
@@ -52,7 +63,7 @@
 .main-product-page .product-grid-wrapper {
   position: relative;
   min-width: 0;
-  padding-inline: clamp(20px, 2vw, 56px);
+  padding-inline: clamp(30px, 3vw, 68px);
 }
 
 .main-product-page .product-grid-wrapper.is-compact {
@@ -99,15 +110,16 @@
 }
 
 .main-product-page .product-grid-arrow--left {
-  left: 0;
+  left: clamp(2px, 0.35vw, 8px);
 }
 
 .main-product-page .product-grid-arrow--right {
-  right: 0;
+  right: clamp(2px, 0.35vw, 8px);
 }
 
 .main-product-page .product-grid {
   --product-grid-gap: clamp(10px, 0.8vw, 14px);
+  --product-card-width: calc((100% - (var(--product-grid-gap) * 3)) / 4);
   display: flex;
   flex-wrap: nowrap;
   gap: var(--product-grid-gap);
@@ -149,7 +161,8 @@
   border: 1px solid #d8d8d8;
   display: grid;
   grid-template-rows: auto 1fr;
-  flex: 0 0 clamp(220px, 23vw, 290px);
+  flex: 0 0 var(--product-card-width);
+  max-width: var(--product-card-width);
   min-width: 0;
   scroll-snap-align: start;
 }
@@ -227,6 +240,9 @@
 }
 
 .main-product-page .product-card-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin-top: clamp(2px, 0.2vw, 4px);
   border: 1px solid transparent;
   border-radius: 999px;
@@ -242,6 +258,7 @@
     transform 0.2s ease,
     box-shadow 0.2s ease,
     background 0.2s ease;
+  text-decoration: none;
 }
 
 .main-product-page .product-card-btn:hover {
@@ -273,6 +290,7 @@
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
+  text-decoration: none;
 }
 
 .main-product-page .product-group-btn:hover {
@@ -307,4 +325,22 @@
   box-shadow:
     0 0 0 0.18vw rgba(255, 255, 255, 0.95),
     0 0 0 0.34vw rgba(95, 108, 163, 0.35);
+}
+
+@media (max-width: 1180px) {
+  .main-product-page .product-grid {
+    --product-card-width: calc((100% - (var(--product-grid-gap) * 2)) / 3);
+  }
+}
+
+@media (max-width: 768px) {
+  .main-product-page .product-grid {
+    --product-card-width: calc((100% - var(--product-grid-gap)) / 2);
+  }
+}
+
+@media (max-width: 560px) {
+  .main-product-page .product-grid {
+    --product-card-width: 100%;
+  }
 }

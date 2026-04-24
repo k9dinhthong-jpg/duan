@@ -8,27 +8,25 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
-    "jquery": "^4.0.0",
-    "owl.carousel": "^2.3.4",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "react-icon": "^1.0.0",
     "react-icons": "^5.6.0",
     "react-router-dom": "^7.14.2",
     "swiper": "^12.1.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
-    "@types/jquery": "^4.0.0",
     "@types/node": "^24.12.2",
-    "@types/owl.carousel": "^2.3.6",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@vitest/coverage-v8": "^3.2.4",
     "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
@@ -37,6 +35,7 @@
     "globals": "^17.4.0",
     "typescript": "^6.0.2",
     "typescript-eslint": "^8.58.0",
-    "vite": "^8.0.4"
+    "vite": "^8.0.4",
+    "vitest": "^3.2.4"
   }
 }

@@ -126,6 +126,11 @@
   border-top: 1px solid #2b334a;
 }
 
+.footer-bottom small {
+  font-size: inherit;
+  color: inherit;
+}
+
 @media (max-width: 1024px) {
   .footer-top {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -149,7 +154,7 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .footer-top {
     grid-template-columns: 1fr;
     gap: 5vw;

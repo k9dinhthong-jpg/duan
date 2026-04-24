@@ -1,4 +1,10 @@
 import { useEffect, useState } from "react";
+import {
+  FaPhoneAlt,
+  FaTelegramPlane,
+  FaTiktok,
+  FaWeixin,
+} from "react-icons/fa";
 import iconZalo from "./img/Zalo.svg.png";
 import "./ButtonContact.css";
 import { toPublicPath } from "../../../utils/publicPath";
@@ -75,7 +81,7 @@ function ButtonContact() {
         rel="noreferrer"
         aria-label="WeChat QR"
       >
-        <i className="fa-brands fa-weixin"></i>
+        <FaWeixin aria-hidden="true" />
       </a>
 
       <a
@@ -85,7 +91,7 @@ function ButtonContact() {
         rel="noreferrer"
         aria-label="Telegram"
       >
-        <i className="fa-brands fa-telegram"></i>
+        <FaTelegramPlane aria-hidden="true" />
       </a>
 
       <a
@@ -95,7 +101,7 @@ function ButtonContact() {
         rel="noreferrer"
         aria-label="TikTok"
       >
-        <i className="fa-brands fa-tiktok"></i>
+        <FaTiktok aria-hidden="true" />
       </a>
 
       <a
@@ -104,7 +110,7 @@ function ButtonContact() {
       >
         <span className="phone-ripple phone-ripple--1"></span>
         <span className="phone-ripple phone-ripple--2"></span>
-        <i className="fa-solid fa-phone"></i>
+        <FaPhoneAlt aria-hidden="true" />
       </a>
     </div>
   );

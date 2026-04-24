@@ -17,7 +17,7 @@ function MainSlider() {
 
   useEffect(() => {
     async function getSlider() {
-      const response = await fetch(toPublicPath("data/slider.json"));
+      const response = await fetch(toPublicPath("data/slider/slider.json"));
       const data = await response.json();
       setDataSlider(data);
     }

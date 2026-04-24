@@ -1,31 +1,118 @@
 import { useEffect, useState } from "react";
-import { FaBars, FaCaretDown, FaSearch, FaTimes } from "react-icons/fa";
+import {
+  FaBars,
+  FaCaretDown,
+  FaGlobe,
+  FaSearch,
+  FaTimes,
+} from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
 import "./Header.css";
 import { toPublicPath } from "../../../utils/publicPath";
 
+type LanguageCode = "vi" | "en" | "zh";
+
 type CompanyData = {
+  shortName?: string;
+  shortname?: string;
   name?: string;
   phone?: string;
 };
 
-const productItem = [
-  { id: 1, name: "MÁY CÔNG TRÌNH HITACHI", link: "/product/hitachi" },
-  { id: 2, name: "MÁY CÔNG TRÌNH KOBELCO", link: "/product/kobelco" },
-  { id: 3, name: "MÁY CÔNG TRÌNH KOMATSU", link: "/product/komatsu" },
-];
+const LANGUAGE_STORAGE_KEY = "site-language";
 
-const serviceItem = [
-  { id: 1, name: "KIỂM TRA BẢO HÀNH", link: "/services/warranty" },
-  { id: 2, name: "DỊCH VỤ SỬA CHỮA", link: "/services/repair" },
-  { id: 3, name: "THUÊ MÁY CÔNG TRÌNH", link: "/services/rent" },
-];
+const languageDisplayMap: Record<LanguageCode, string> = {
+  vi: "VI",
+  en: "EN",
+  zh: "中文",
+};
 
-const introductionItem = [
-  { id: 1, name: "VỀ CHÚNG TÔI", link: "/about-us" },
-  // { id: 2, name: "GIÁ TRỊ CỐT LÕI", link: "/core-values" },
-  // { id: 3, name: "TẦM NHÌN - SỨ MỆNH", link: "/vision-mission" },
-];
+const labels = {
+  vi: {
+    kicker: "CÔNG TY XUẤT NHẬP KHẨU",
+    hotlineLabel: "TƯ VẤN NHANH 24/7",
+    mainNavAria: "Điều hướng chính",
+    closeMenu: "Đóng menu",
+    openMenu: "Mở menu",
+    homeAria: "Trang chủ",
+    home: "TRANG CHỦ",
+    product: "SẢN PHẨM",
+    services: "DỊCH VỤ",
+    intro: "GIỚI THIỆU",
+    news: "TIN TỨC",
+    contact: "LIÊN HỆ",
+    searchPlaceholder: "Tìm kiếm...",
+    searchAria: "Tìm kiếm",
+    languageAria: "Chọn ngôn ngữ",
+    productItems: [
+      { id: 1, name: "MÁY CÔNG TRÌNH HITACHI", link: "/product/hitachi" },
+      { id: 2, name: "MÁY CÔNG TRÌNH KOBELCO", link: "/product/kobelco" },
+      { id: 3, name: "MÁY CÔNG TRÌNH KOMATSU", link: "/product/komatsu" },
+    ],
+    serviceItems: [
+      { id: 1, name: "KIỂM TRA BẢO HÀNH", link: "/services/warranty" },
+      { id: 2, name: "DỊCH VỤ SỬA CHỮA", link: "/services/repair" },
+      { id: 3, name: "THUÊ MÁY CÔNG TRÌNH", link: "/services/rent" },
+    ],
+    introItems: [{ id: 1, name: "VỀ CHÚNG TÔI", link: "/about-us" }],
+  },
+  en: {
+    kicker: "IMPORT EXPORT COMPANY",
+    hotlineLabel: "FAST CONSULTING 24/7",
+    mainNavAria: "Main navigation",
+    closeMenu: "Close menu",
+    openMenu: "Open menu",
+    homeAria: "Home",
+    home: "HOME",
+    product: "PRODUCTS",
+    services: "SERVICES",
+    intro: "ABOUT",
+    news: "NEWS",
+    contact: "CONTACT",
+    searchPlaceholder: "Search...",
+    searchAria: "Search",
+    languageAria: "Select language",
+    productItems: [
+      { id: 1, name: "HITACHI MACHINERY", link: "/product/hitachi" },
+      { id: 2, name: "KOBELCO MACHINERY", link: "/product/kobelco" },
+      { id: 3, name: "KOMATSU MACHINERY", link: "/product/komatsu" },
+    ],
+    serviceItems: [
+      { id: 1, name: "WARRANTY CHECK", link: "/services/warranty" },
+      { id: 2, name: "REPAIR SERVICE", link: "/services/repair" },
+      { id: 3, name: "MACHINE RENTAL", link: "/services/rent" },
+    ],
+    introItems: [{ id: 1, name: "ABOUT US", link: "/about-us" }],
+  },
+  zh: {
+    kicker: "工程机械进出口公司",
+    hotlineLabel: "24/7 快速咨询",
+    mainNavAria: "主导航",
+    closeMenu: "关闭菜单",
+    openMenu: "打开菜单",
+    homeAria: "首页",
+    home: "首页",
+    product: "产品",
+    services: "服务",
+    intro: "关于我们",
+    news: "新闻",
+    contact: "联系",
+    searchPlaceholder: "搜索...",
+    searchAria: "搜索",
+    languageAria: "选择语言",
+    productItems: [
+      { id: 1, name: "日立工程机械", link: "/product/hitachi" },
+      { id: 2, name: "神钢工程机械", link: "/product/kobelco" },
+      { id: 3, name: "小松工程机械", link: "/product/komatsu" },
+    ],
+    serviceItems: [
+      { id: 1, name: "保修查询", link: "/services/warranty" },
+      { id: 2, name: "维修服务", link: "/services/repair" },
+      { id: 3, name: "设备租赁", link: "/services/rent" },
+    ],
+    introItems: [{ id: 1, name: "关于我们", link: "/about-us" }],
+  },
+};
 
 function Header() {
   const { pathname } = useLocation();
@@ -39,6 +126,7 @@ function Header() {
   const isContactActive = pathname.startsWith("/contact");
 
   const [companyData, setCompanyData] = useState<CompanyData>({
+    shortName: "MÁY CÔNG TRÌNH THUẬN PHÁT",
     name: "MÁY CÔNG TRÌNH THUẬN PHÁT",
     phone: "0948 299 444",
   });
@@ -46,6 +134,16 @@ function Header() {
   const [navGap, setNavGap] = useState(0);
   const [navTop, setNavTop] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [language, setLanguage] = useState<LanguageCode>(() => {
+    if (typeof window === "undefined") return "vi";
+    const saved = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    if (saved === "vi" || saved === "en" || saved === "zh") {
+      return saved;
+    }
+    return "vi";
+  });
+
+  const text = labels[language];
 
   useEffect(() => {
     async function fetchCompanyData() {
@@ -56,6 +154,8 @@ function Header() {
         if (!response.ok) return;
         const data = (await response.json()) as CompanyData;
         setCompanyData((prev) => ({
+          shortName:
+            data.shortName?.trim() || data.shortname?.trim() || prev.shortName,
           name: data.name?.trim() || prev.name,
           phone: data.phone?.trim() || prev.phone,
         }));
@@ -116,15 +216,55 @@ function Header() {
     };
   }, []);
 
+  useEffect(() => {
+    function handleEscClose(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsMenuOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleEscClose);
+    return () => {
+      window.removeEventListener("keydown", handleEscClose);
+    };
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+    document.documentElement.lang =
+      language === "vi" ? "vi" : language === "zh" ? "zh-CN" : "en";
+  }, [language]);
+
   return (
     <>
       <div className="header-banner">
         <div className="banner-left">
-          <p className="banner-kicker">CÔNG TY XUẤT NHẬP KHẨU</p>
-          <h1 className="banner-title">{companyData.name}</h1>
+          <p className="banner-kicker">{text.kicker}</p>
+          <h1 className="banner-title">
+            {companyData.shortName || companyData.shortname || companyData.name}
+          </h1>
+        </div>
+        <div
+          className="banner-language"
+          role="group"
+          aria-label={text.languageAria}
+        >
+          <FaGlobe aria-hidden="true" />
+          {(["vi", "en", "zh"] as LanguageCode[]).map((code) => (
+            <button
+              key={code}
+              type="button"
+              className={`lang-btn ${language === code ? "is-active" : ""}`}
+              onClick={() => setLanguage(code)}
+              aria-pressed={language === code}
+              aria-label={languageDisplayMap[code]}
+            >
+              {languageDisplayMap[code]}
+            </button>
+          ))}
         </div>
         <div className="banner-right">
-          <p className="banner-hotline-label">TƯ VẤN NHANH 24/7</p>
+          <p className="banner-hotline-label">{text.hotlineLabel}</p>
           <a
             className="banner-hotline-value"
             href={`tel:${(companyData.phone ?? "").replace(/\s+/g, "")}`}
@@ -133,11 +273,15 @@ function Header() {
           </a>
         </div>
       </div>
-      <nav className="site-nav" style={{ top: `${navTop}px` }}>
+      <nav
+        className="site-nav"
+        style={{ top: `${navTop}px` }}
+        aria-label={text.mainNavAria}
+      >
         <button
           className="nav-toggle"
           type="button"
-          aria-label={isMenuOpen ? "Đóng menu" : "Mở menu"}
+          aria-label={isMenuOpen ? text.closeMenu : text.openMenu}
           aria-expanded={isMenuOpen}
           aria-controls="site-nav-menu"
           onClick={() => setIsMenuOpen((prev) => !prev)}
@@ -145,7 +289,7 @@ function Header() {
           {isMenuOpen ? <FaTimes /> : <FaBars />}
         </button>
 
-        <Link className="nav-mobile-logo" to="/home" aria-label="Trang chủ">
+        <Link className="nav-mobile-logo" to="/home" aria-label={text.homeAria}>
           <img src={toPublicPath("img/Logo/Logo.png")} alt="Thuận Phát" />
         </Link>
 
@@ -155,15 +299,15 @@ function Header() {
         >
           <li className={isHomeActive ? "is-active" : ""}>
             <Link to="/home" onClick={() => setIsMenuOpen(false)}>
-              TRANG CHỦ
+              {text.home}
             </Link>
           </li>
           <li className={`product-menu ${isProductActive ? "is-active" : ""}`}>
             <Link to="/product" onClick={() => setIsMenuOpen(false)}>
-              SẢN PHẨM <FaCaretDown />
+              {text.product} <FaCaretDown />
             </Link>
             <ul className="product-menu-item">
-              {productItem.map((item) => (
+              {text.productItems.map((item) => (
                 <li
                   key={item.id}
                   className={pathname.startsWith(item.link) ? "is-active" : ""}
@@ -177,10 +321,10 @@ function Header() {
           </li>
           <li className={`product-menu ${isServiceActive ? "is-active" : ""}`}>
             <Link to="/services/warranty" onClick={() => setIsMenuOpen(false)}>
-              DỊCH VỤ <FaCaretDown />
+              {text.services} <FaCaretDown />
             </Link>
             <ul className="product-menu-item">
-              {serviceItem.map((item) => (
+              {text.serviceItems.map((item) => (
                 <li
                   key={item.id}
                   className={pathname.startsWith(item.link) ? "is-active" : ""}
@@ -194,10 +338,10 @@ function Header() {
           </li>
           <li className={`product-menu ${isIntroActive ? "is-active" : ""}`}>
             <Link to="/about-us" onClick={() => setIsMenuOpen(false)}>
-              GIỚI THIỆU <FaCaretDown />
+              {text.intro} <FaCaretDown />
             </Link>
             <ul className="product-menu-item">
-              {introductionItem.map((item) => (
+              {text.introItems.map((item) => (
                 <li
                   key={item.id}
                   className={pathname.startsWith(item.link) ? "is-active" : ""}
@@ -211,12 +355,12 @@ function Header() {
           </li>
           <li className={isNewsActive ? "is-active" : ""}>
             <Link to="/news" onClick={() => setIsMenuOpen(false)}>
-              TIN TỨC
+              {text.news}
             </Link>
           </li>
           <li className={isContactActive ? "is-active" : ""}>
             <Link to="/contact" onClick={() => setIsMenuOpen(false)}>
-              LIÊN HỆ
+              {text.contact}
             </Link>
           </li>
         </ul>
@@ -232,10 +376,14 @@ function Header() {
               type="search"
               name="find-text"
               id="find-text"
-              placeholder="Tìm kiếm..."
-              aria-label="Tìm kiếm"
+              placeholder={text.searchPlaceholder}
+              aria-label={text.searchAria}
             />
-            <button className="search-btn" type="submit" aria-label="Tìm kiếm">
+            <button
+              className="search-btn"
+              type="submit"
+              aria-label={text.searchAria}
+            >
               <FaSearch aria-hidden="true" />
             </button>
           </form>

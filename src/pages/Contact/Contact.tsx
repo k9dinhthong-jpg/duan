@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   FaFacebookF,
   FaInstagram,
@@ -103,6 +104,7 @@ function validateForm(values: ContactFormValues): ContactFormErrors {
 }
 
 function Contact() {
+  const [searchParams] = useSearchParams();
   const [companyData, setCompanyData] = useState<CompanyData>({
     name: "Công Ty Xuất Nhập Khẩu Máy Công Trình Thuận Phát",
     shortName: "Máy Công Trình Thuận Phát",
@@ -123,7 +125,9 @@ function Contact() {
     fullName: "",
     email: "",
     phone: "",
-    message: "",
+    message: searchParams.get("product")
+      ? `Tôi cần tư vấn sản phẩm: ${searchParams.get("product")}`
+      : "",
   });
   const [formErrors, setFormErrors] = useState<ContactFormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -131,6 +135,16 @@ function Contact() {
     type: "idle",
     message: "",
   });
+
+  useEffect(() => {
+    const requestedProduct = searchParams.get("product");
+    if (!requestedProduct) return;
+
+    setFormValues((prev) => ({
+      ...prev,
+      message: `Tôi cần tư vấn sản phẩm: ${requestedProduct}`,
+    }));
+  }, [searchParams]);
 
   useEffect(() => {
     async function fetchCompanyData() {

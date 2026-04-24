@@ -145,7 +145,7 @@
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 768px) {
   .featured-news {
     width: min(94vw, 640px);
     padding: 7vw 0;

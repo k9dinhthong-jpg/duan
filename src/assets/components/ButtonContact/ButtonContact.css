@@ -109,3 +109,127 @@
     transform: rotate(0deg);
   }
 }
+
+@media (min-width: 1201px) and (max-width: 1440px) {
+  .contact-fixed {
+    left: 20px;
+    bottom: 20px;
+    gap: 11px;
+  }
+
+  .contact-btn {
+    width: 46px;
+    height: 46px;
+  }
+
+  .contact-btn.zalo img {
+    width: 35px;
+    height: 35px;
+  }
+
+  .contact-btn.wechat,
+  .contact-btn.telegram {
+    font-size: 24px;
+  }
+
+  .contact-btn.tiktok {
+    font-size: 21px;
+  }
+
+  .contact-btn.phone {
+    font-size: 20px;
+  }
+}
+
+@media (min-width: 1025px) and (max-width: 1200px) {
+  .contact-fixed {
+    left: 18px;
+    bottom: 18px;
+    gap: 10px;
+  }
+
+  .contact-btn {
+    width: 42px;
+    height: 42px;
+  }
+
+  .contact-btn.zalo img {
+    width: 32px;
+    height: 32px;
+  }
+
+  .contact-btn.wechat,
+  .contact-btn.telegram {
+    font-size: 22px;
+  }
+
+  .contact-btn.tiktok {
+    font-size: 19px;
+  }
+
+  .contact-btn.phone {
+    font-size: 18px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .contact-fixed {
+    left: 16px;
+    bottom: 16px;
+    gap: 10px;
+  }
+
+  .contact-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .contact-btn.zalo img {
+    width: 34px;
+    height: 34px;
+  }
+
+  .contact-btn.wechat,
+  .contact-btn.telegram {
+    font-size: 24px;
+  }
+
+  .contact-btn.tiktok {
+    font-size: 21px;
+  }
+
+  .contact-btn.phone {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .contact-fixed {
+    left: 14px;
+    bottom: 14px;
+    gap: 10px;
+  }
+
+  .contact-btn {
+    width: 48px;
+    height: 48px;
+  }
+
+  .contact-btn.zalo img {
+    width: 36px;
+    height: 36px;
+  }
+
+  .contact-btn.wechat,
+  .contact-btn.telegram {
+    font-size: 25px;
+  }
+
+  .contact-btn.tiktok {
+    font-size: 22px;
+  }
+
+  .contact-btn.phone {
+    font-size: 21px;
+  }
+}

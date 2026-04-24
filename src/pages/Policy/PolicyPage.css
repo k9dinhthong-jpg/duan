@@ -1,0 +1,26 @@
+.policy-page {
+  width: min(94vw, 980px);
+  margin-inline: auto;
+  padding: clamp(16px, 2vw, 30px) 0 clamp(30px, 3vw, 48px);
+  color: #1f2937;
+}
+
+.policy-title {
+  margin: 0 0 14px;
+  font-size: clamp(24px, 2.1vw, 38px);
+  line-height: 1.2;
+}
+
+.policy-updated {
+  margin: 0 0 16px;
+  color: #5f6b7e;
+  font-size: clamp(13px, 0.9vw, 16px);
+}
+
+.policy-list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+  line-height: 1.65;
+}

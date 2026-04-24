@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import { Link } from "react-router-dom";
 import "./MainProduct.css";
 import { toPublicPath } from "../../utils/publicPath";
 
 type ProductItem = {
   id: string;
-  name: string;
+  model?: string;
+  name?: string;
+  date?: string;
   contact?: string;
   price: string;
   status?: string;
@@ -13,6 +16,15 @@ type ProductItem = {
   image: string;
   alt: string;
 };
+
+function getProductModel(product: ProductItem) {
+  return product.model ?? product.name ?? product.id;
+}
+
+function getProductDisplay(product: ProductItem) {
+  const model = getProductModel(product);
+  return product.date ? `${model} (${product.date})` : model;
+}
 
 type MainProductGroup = {
   id: string;
@@ -25,6 +37,8 @@ type ScrollState = { atStart: boolean; atEnd: boolean };
 
 function MainProduct() {
   const [groups, setGroups] = useState<MainProductGroup[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [sectionOffset, setSectionOffset] = useState(0);
   const gridRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [scrollStates, setScrollStates] = useState<Record<string, ScrollState>>(
@@ -53,22 +67,36 @@ function MainProduct() {
 
   useEffect(() => {
     async function fetchMainProducts() {
-      const files = [
-        "data/Main-Product/Product-Hitachi.json",
-        "data/Main-Product/Product-Kobelco.json",
-        "data/Main-Product/Product-Komatsu.json",
-      ];
+      try {
+        setIsLoading(true);
+        setLoadError("");
 
-      const responses = await Promise.all(
-        files.map((file) => fetch(toPublicPath(file))),
-      );
-      const data = await Promise.all(
-        responses.map(
-          (response) => response.json() as Promise<MainProductGroup>,
-        ),
-      );
+        const files = [
+          "data/Main-Product/Product-Hitachi.json",
+          "data/Main-Product/Product-Kobelco.json",
+          "data/Main-Product/Product-Komatsu.json",
+        ];
 
-      setGroups(data);
+        const responses = await Promise.all(
+          files.map((file) => fetch(toPublicPath(file))),
+        );
+
+        if (responses.some((response) => !response.ok)) {
+          throw new Error("load-failed");
+        }
+
+        const data = await Promise.all(
+          responses.map(
+            (response) => response.json() as Promise<MainProductGroup>,
+          ),
+        );
+
+        setGroups(data);
+      } catch {
+        setLoadError("Không thể tải danh sách sản phẩm. Vui lòng thử lại sau.");
+      } finally {
+        setIsLoading(false);
+      }
     }
 
     fetchMainProducts();
@@ -112,18 +140,34 @@ function MainProduct() {
         className="product-section"
         style={{ marginTop: sectionOffset + 12 }}
       >
+        {isLoading && (
+          <p className="product-state" role="status">
+            Đang tải danh sách sản phẩm...
+          </p>
+        )}
+
+        {!isLoading && loadError && (
+          <p className="product-state is-error" role="alert">
+            {loadError}
+          </p>
+        )}
+
         {groups.map((group) => {
           const state = scrollStates[group.id] ?? {
             atStart: true,
             atEnd: false,
           };
-          const visibleProducts = group.products
-            .filter(
-              (product) =>
-                product.badge === "Hot" && product.status !== "Đã bán",
-            )
-            .sort((a, b) => b.id.localeCompare(a.id));
-          const isCompactLayout = visibleProducts.length <= 3;
+          const visibleProducts = group.products.slice().sort((a, b) => {
+            const hotRankA = a.badge === "Hot" ? 0 : 1;
+            const hotRankB = b.badge === "Hot" ? 0 : 1;
+
+            if (hotRankA !== hotRankB) {
+              return hotRankA - hotRankB;
+            }
+
+            return b.id.localeCompare(a.id);
+          });
+          const isCompactLayout = visibleProducts.length <= 4;
 
           if (visibleProducts.length === 0) {
             return null;
@@ -159,10 +203,14 @@ function MainProduct() {
                         <img
                           src={toPublicPath(product.image)}
                           alt={product.alt}
+                          loading="lazy"
+                          decoding="async"
                         />
                       </div>
                       <div className="product-card-content">
-                        <h3 className="product-card-title">{product.name}</h3>
+                        <h3 className="product-card-title">
+                          {getProductDisplay(product)}
+                        </h3>
                         <p className="product-card-meta">
                           <span className="product-card-meta-label">
                             Tình trạng:
@@ -183,9 +231,12 @@ function MainProduct() {
                           </span>{" "}
                           {product.contact ?? "Liên hệ để biết giá"}
                         </p>
-                        <button className="product-card-btn" type="button">
+                        <Link
+                          className="product-card-btn"
+                          to={`/product/${group.brand.toLowerCase()}?query=${encodeURIComponent(product.id)}`}
+                        >
                           Xem chi tiết
-                        </button>
+                        </Link>
                       </div>
                     </div>
                   ))}
@@ -199,12 +250,15 @@ function MainProduct() {
                   <FaArrowRight />
                 </button>
               </div>
-              <button className="product-group-btn" type="button">
+              <Link
+                className="product-group-btn"
+                to={`/product/${group.brand.toLowerCase()}`}
+              >
                 <span className="product-group-btn-label">Xem tất cả</span>
                 <span className="product-group-btn-icon" aria-hidden="true">
                   <FaArrowRight />
                 </span>
-              </button>
+              </Link>
             </article>
           );
         })}

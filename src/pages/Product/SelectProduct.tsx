@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import "./SelectProduct.css";
 import { toPublicPath } from "../../utils/publicPath";
 
 type ProductItem = {
   id: string;
-  name: string;
+  model?: string;
+  name?: string;
+  date?: string;
   contact?: string;
   price: string;
   status?: string;
@@ -13,6 +15,15 @@ type ProductItem = {
   image: string;
   alt: string;
 };
+
+function getProductModel(product: ProductItem) {
+  return product.model ?? product.name ?? product.id;
+}
+
+function getProductDisplay(product: ProductItem) {
+  const model = getProductModel(product);
+  return product.date ? `${model} (${product.date})` : model;
+}
 
 type ProductGroup = {
   id: string;
@@ -23,21 +34,45 @@ type ProductGroup = {
 
 function SelectProduct() {
   const { brand = "hitachi" } = useParams<{ brand: string }>();
+  const [searchParams] = useSearchParams();
   const [group, setGroup] = useState<ProductGroup | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [sectionOffset, setSectionOffset] = useState(0);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(
+    searchParams.get("query") ?? "",
+  );
   const [selectedName, setSelectedName] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
 
   useEffect(() => {
+    setSearchQuery(searchParams.get("query") ?? "");
+  }, [searchParams]);
+
+  useEffect(() => {
     async function fetchProductsByBrand() {
-      const capitalizedBrand =
-        brand.charAt(0).toUpperCase() + brand.slice(1).toLowerCase();
-      const response = await fetch(
-        toPublicPath(`data/Main-Product/Product-${capitalizedBrand}.json`),
-      );
-      const data = (await response.json()) as ProductGroup;
-      setGroup(data);
+      try {
+        setIsLoading(true);
+        setLoadError("");
+
+        const capitalizedBrand =
+          brand.charAt(0).toUpperCase() + brand.slice(1).toLowerCase();
+        const response = await fetch(
+          toPublicPath(`data/Main-Product/Product-${capitalizedBrand}.json`),
+        );
+
+        if (!response.ok) {
+          throw new Error("load-failed");
+        }
+
+        const data = (await response.json()) as ProductGroup;
+        setGroup(data);
+      } catch {
+        setLoadError("Không thể tải dữ liệu sản phẩm theo thương hiệu này.");
+        setGroup(null);
+      } finally {
+        setIsLoading(false);
+      }
     }
 
     fetchProductsByBrand();
@@ -83,18 +118,29 @@ function SelectProduct() {
   }, []);
 
   const sortedProducts = useMemo(() => {
-    return (group?.products ?? [])
-      .slice()
-      .sort((a, b) => b.id.localeCompare(a.id));
+    return (group?.products ?? []).slice().sort((a, b) => {
+      const hotRankA = a.badge === "Hot" ? 0 : 1;
+      const hotRankB = b.badge === "Hot" ? 0 : 1;
+
+      if (hotRankA !== hotRankB) {
+        return hotRankA - hotRankB;
+      }
+
+      return b.id.localeCompare(a.id);
+    });
   }, [group]);
 
   const nameOptions = useMemo(() => {
-    return sortedProducts.map((product) => product.name);
+    return sortedProducts.map((product) => getProductDisplay(product));
   }, [sortedProducts]);
 
   const statusOptions = useMemo(() => {
     return [
-      ...new Set(sortedProducts.map((product) => product.status ?? "Còn hàng")),
+      ...new Set([
+        ...sortedProducts.map((product) => product.status ?? "Còn hàng"),
+        "Đã bán",
+        "Đặt Hàng",
+      ]),
     ];
   }, [sortedProducts]);
 
@@ -104,16 +150,17 @@ function SelectProduct() {
     return sortedProducts.filter((product) => {
       const currentStatus = product.status ?? "Còn hàng";
 
-      const byName = selectedName === "all" || product.name === selectedName;
+      const productModel = getProductModel(product);
+      const productDisplay = getProductDisplay(product);
+      const byName = selectedName === "all" || productDisplay === selectedName;
       const byStatus =
         selectedStatus === "all" || currentStatus === selectedStatus;
       const bySearch =
         normalizedQuery.length === 0 ||
-        product.name.toLowerCase().includes(normalizedQuery) ||
+        productModel.toLowerCase().includes(normalizedQuery) ||
         product.id.toLowerCase().includes(normalizedQuery);
-      const byBadge = product.badge === "Hot" && currentStatus !== "Đã bán";
 
-      return byName && byStatus && bySearch && byBadge;
+      return byName && byStatus && bySearch;
     });
   }, [searchQuery, selectedName, selectedStatus, sortedProducts]);
 
@@ -122,6 +169,18 @@ function SelectProduct() {
       <h1 className="product-page__title">
         {group?.groupTitle ?? "MÁY CÔNG TRÌNH HITACHI"}
       </h1>
+
+      {isLoading && (
+        <p className="product-filter__empty" role="status">
+          Đang tải dữ liệu sản phẩm...
+        </p>
+      )}
+
+      {!isLoading && loadError && (
+        <p className="product-filter__empty" role="alert">
+          {loadError}
+        </p>
+      )}
 
       <div className="product-filter">
         <label className="product-filter__field" htmlFor="product-search">
@@ -185,11 +244,15 @@ function SelectProduct() {
                 className="product-card__image"
                 src={toPublicPath(product.image)}
                 alt={product.alt}
+                loading="lazy"
+                decoding="async"
               />
             </div>
 
             <div className="product-card__content">
-              <h2 className="product-card__name">{product.name}</h2>
+              <h2 className="product-card__name">
+                {getProductDisplay(product)}
+              </h2>
 
               <p className="product-card__meta">
                 <span className="product-card__meta-label">Tình trạng:</span>{" "}
@@ -207,9 +270,12 @@ function SelectProduct() {
                 {product.contact ?? "Liên hệ để biết giá"}
               </p>
 
-              <button className="product-card__btn" type="button">
-                Xem chi tiết
-              </button>
+              <Link
+                className="product-card__btn"
+                to={`/contact?product=${encodeURIComponent(`${product.id} - ${getProductDisplay(product)}`)}`}
+              >
+                Liên hệ tư vấn
+              </Link>
             </div>
           </article>
         ))}

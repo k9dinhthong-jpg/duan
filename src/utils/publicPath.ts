@@ -1,7 +1,8 @@
-export function toPublicPath(path: string) {
-  const normalizedBaseUrl = import.meta.env.BASE_URL.endsWith("/")
-    ? import.meta.env.BASE_URL
-    : `${import.meta.env.BASE_URL}/`;
-
+export function resolvePublicPath(path: string, baseUrl: string) {
+  const normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
   return `${normalizedBaseUrl}${path.replace(/^\/+/, "")}`;
+}
+
+export function toPublicPath(path: string) {
+  return resolvePublicPath(path, import.meta.env.BASE_URL);
 }

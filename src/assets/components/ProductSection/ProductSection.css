@@ -90,13 +90,12 @@
 }
 
 .product-grid {
-  width: 70%;
-  max-width: 1700px;
+  width: 100%;
+  max-width: 100%;
   margin-inline: auto;
   display: grid;
-  grid-template-columns: repeat(4, minmax(264px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(264px, 1fr));
   gap: clamp(20px, 1.8vw, 34px);
-  justify-content: center;
 }
 
 .product-card {
@@ -182,6 +181,9 @@
 }
 
 .product-card-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin-top: clamp(2px, 0.25vw, 5px);
   border: 1px solid transparent;
   border-radius: 999px;
@@ -198,6 +200,7 @@
     box-shadow 0.2s ease,
     background-color 0.2s ease,
     color 0.2s ease;
+  text-decoration: none;
 }
 
 .product-card-btn:hover {
@@ -230,6 +233,7 @@
     transform 0.2s ease,
     box-shadow 0.2s ease,
     background-color 0.2s ease;
+  text-decoration: none;
 }
 
 .product-group-btn:hover {

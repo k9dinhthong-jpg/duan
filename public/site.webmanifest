@@ -1,0 +1,16 @@
+{
+  "name": "Thuận Phát - Máy Công Trình",
+  "short_name": "Thuận Phát",
+  "start_url": "/duan/",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#12243e",
+  "description": "Máy công trình Thuận Phát - sản phẩm và dịch vụ kỹ thuật.",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

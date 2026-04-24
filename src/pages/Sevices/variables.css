@@ -32,8 +32,17 @@
 }
 
 :root {
+  /* Breakpoint reference (for consistency across files) */
+  --bp-mobile-max: 768px;
+  --bp-tablet-min: 769px;
+  --bp-tablet-max: 1024px;
+  --bp-desktop-min: 1025px;
+  --bp-desktop-max: 1200px;
+  --bp-wide-min: 1201px;
+
   --viewport-safe-width: 100vw;
   --app-frame-width: min(100%, var(--viewport-safe-width));
+  --container-max: 1170px;
 
   --font-family-base:
     "Be Vietnam Pro", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -50,7 +59,7 @@
   --color-success: #1d8f4d;
   --color-danger: #d13b3b;
 
-  /* Type scale */
+  /* Typography */
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
