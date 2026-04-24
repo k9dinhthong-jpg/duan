@@ -1,0 +1,107 @@
+{
+  "id": "Komatsu",
+  "brand": "Komatsu",
+  "groupTitle": "MÁY CÔNG TRÌNH KOMATSU",
+  "products": [
+    {
+      "id": "Komatsu01",
+      "name": "Komatsu PC200-8",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "badge": "Hot",
+      "image": "/img/Product/Komatsu/Komatsu01.png",
+      "alt": "Komatsu"
+    },
+    {
+      "id": "Komatsu02",
+      "name": "Komatsu PC300-8",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "badge": "Hot",
+      "image": "/img/Product/Komatsu/Komatsu02.png",
+      "alt": "Komatsu"
+    },
+    {
+      "id": "Komatsu03",
+      "name": "Komatsu PC400-8",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "badge": null,
+      "image": "/img/Product/Komatsu/Komatsu03.png",
+      "alt": "Komatsu"
+    },
+    {
+      "id": "Komatsu04",
+      "name": "Komatsu PC500-8",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "badge": null,
+      "image": "/img/Product/Komatsu/Komatsu04.png",
+      "alt": "Komatsu"
+    },
+    {
+      "id": "Komatsu05",
+      "name": "Komatsu PC130-8",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "badge": null,
+      "image": "/img/Product/Komatsu/Komatsu05.png",
+      "alt": "Komatsu"
+    },
+    {
+      "id": "Komatsu06",
+      "name": "Komatsu PC160-8",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "badge": null,
+      "image": "/img/Product/Komatsu/Komatsu06.png",
+      "alt": "Komatsu"
+    },
+    {
+      "id": "Komatsu07",
+      "name": "Komatsu PC210-8",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "badge": "Hot",
+      "image": "/img/Product/Komatsu/Komatsu07.png",
+      "alt": "Komatsu"
+    },
+    {
+      "id": "Komatsu08",
+      "name": "Komatsu PC350-8",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "badge": "Hot",
+      "image": "/img/Product/Komatsu/Komatsu08.png",
+      "alt": "Komatsu"
+    },
+    {
+      "id": "Komatsu09",
+      "name": "Komatsu PC450-8",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "badge": "Hot",
+      "image": "/img/Product/Komatsu/Komatsu09.png",
+      "alt": "Komatsu"
+    },
+    {
+      "id": "Komatsu10",
+      "name": "Komatsu PC800-8",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "badge": "Hot",
+      "image": "/img/Product/Komatsu/Komatsu10.png",
+      "alt": "Komatsu"
+    }
+  ]
+}

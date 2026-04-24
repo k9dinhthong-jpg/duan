@@ -1,0 +1,107 @@
+{
+  "id": "Hitachi",
+  "brand": "Hitachi",
+  "groupTitle": "MÁY CÔNG TRÌNH HITACHI",
+  "products": [
+    {
+      "id": "Hitachi01",
+      "name": "Hitachi ZX200-5G",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "badge": "Hot",
+      "image": "/img/Product/Hitachi/Hitachi01.png",
+      "alt": "Hitachi"
+    },
+    {
+      "id": "Hitachi02",
+      "name": "Hitachi ZX330-5G",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "badge": "Hot",
+      "image": "/img/Product/Hitachi/Hitachi02.png",
+      "alt": "Hitachi"
+    },
+    {
+      "id": "Hitachi03",
+      "name": "Hitachi ZX470-5G",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "badge": "Hot",
+      "image": "/img/Product/Hitachi/Hitachi03.png",
+      "alt": "Hitachi"
+    },
+    {
+      "id": "Hitachi04",
+      "name": "Hitachi ZX650-5G",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "badge": "Hot",
+      "image": "/img/Product/Hitachi/Hitachi04.png",
+      "alt": "Hitachi"
+    },
+    {
+      "id": "Hitachi05",
+      "name": "Hitachi ZX120-6",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "badge": "Hot",
+      "image": "/img/Product/Hitachi/Hitachi05.png",
+      "alt": "Hitachi"
+    },
+    {
+      "id": "Hitachi06",
+      "name": "Hitachi ZX130-6",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "badge": "Hot",
+      "image": "/img/Product/Hitachi/Hitachi06.png",
+      "alt": "Hitachi"
+    },
+    {
+      "id": "Hitachi07",
+      "name": "Hitachi ZX210-6",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "badge": "Hot",
+      "image": "/img/Product/Hitachi/Hitachi07.png",
+      "alt": "Hitachi"
+    },
+    {
+      "id": "Hitachi08",
+      "name": "Hitachi ZX350-6",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "badge": null,
+      "image": "/img/Product/Hitachi/Hitachi08.png",
+      "alt": "Hitachi"
+    },
+    {
+      "id": "Hitachi09",
+      "name": "Hitachi ZX490-6",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "badge": null,
+      "image": "/img/Product/Hitachi/Hitachi09.png",
+      "alt": "Hitachi"
+    },
+    {
+      "id": "Hitachi10",
+      "name": "Hitachi ZX890-6",
+      "contact": "0948.299.444",
+      "status": "Còn hàng",
+      "price": "",
+      "badge": null,
+      "image": "/img/Product/Hitachi/Hitachi10.png",
+      "alt": "Hitachi"
+    }
+  ]
+}
