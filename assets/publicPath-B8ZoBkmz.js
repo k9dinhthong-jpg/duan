@@ -1,0 +1,1 @@
+function e(e,t){return`${t.endsWith(`/`)?t:`${t}/`}${e.replace(/^\/+/,``)}`}function t(t){return e(t,`/duan/`)}export{t};
