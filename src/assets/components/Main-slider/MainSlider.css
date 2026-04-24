@@ -3,7 +3,7 @@
   max-width: 100vw;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
-  height: clamp(300px, 31.25vw, 600px);
+  height: clamp(340px, 34vw, 660px);
   overflow: hidden;
   position: relative;
 }

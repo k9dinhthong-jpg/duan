@@ -1,0 +1,54 @@
+.service-dev-page {
+  width: min(1200px, 100% - 2rem);
+  margin: calc(var(--site-nav-gap, 0px) + clamp(22px, 2vw, 48px)) auto 2rem;
+  min-height: clamp(300px, 48vh, 520px);
+  display: grid;
+  place-items: center;
+}
+
+.service-dev-card {
+  width: min(760px, 100%);
+  border: 1px solid #dce2f2;
+  border-radius: 18px;
+  padding: clamp(1.3rem, 2.4vw, 2.2rem);
+  background:
+    radial-gradient(
+      circle at 10% 20%,
+      rgba(82, 104, 174, 0.12),
+      transparent 42%
+    ),
+    radial-gradient(circle at 92% 82%, rgba(62, 81, 142, 0.1), transparent 40%),
+    #ffffff;
+  box-shadow: 0 12px 30px rgba(22, 36, 73, 0.12);
+  text-align: center;
+}
+
+.service-dev-kicker {
+  margin: 0;
+  font-size: clamp(12px, 0.86vw, 15px);
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  color: #55639a;
+  text-transform: uppercase;
+}
+
+.service-dev-title {
+  margin: 0.5rem 0 0;
+  font-size: clamp(24px, 2.1vw, 40px);
+  line-height: 1.2;
+  color: #0f2147;
+}
+
+.service-dev-desc {
+  margin: 0.9rem 0 0;
+  font-size: clamp(15px, 1.03vw, 19px);
+  line-height: 1.65;
+  color: #425072;
+}
+
+.service-dev-note {
+  margin: 0.85rem 0 0;
+  font-size: clamp(14px, 0.95vw, 17px);
+  font-weight: 600;
+  color: #5a67a0;
+}

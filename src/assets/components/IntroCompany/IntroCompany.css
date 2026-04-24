@@ -3,12 +3,24 @@
 }
 
 .intro-company-inner {
+  width: 100%;
   padding: 0;
-  margin: 0;
+  margin-inline: auto;
   display: grid;
   grid-template-columns: 60% 35%;
   gap: 4vw;
   align-items: center;
+}
+
+@media (min-width: 1025px) {
+  .intro-company .intro-company-inner {
+    width: 100%;
+    transition: width 0.6s ease;
+  }
+
+  .intro-company.is-centered .intro-company-inner {
+    width: 80%;
+  }
 }
 
 .intro-company-left {
@@ -20,7 +32,7 @@
   margin: 0;
   width: 100%;
   text-align: center;
-  font-size: clamp(24px, 2vw, 42px);
+  font-size: clamp(22px, 1.85vw, 38px);
   font-weight: 700;
   line-height: 1.2;
   color: #11151f;
@@ -89,7 +101,7 @@
 
 .intro-company-right img {
   width: 100%;
-  height: clamp(320px, 23vw, 520px);
+  height: clamp(240px, 17.25vw, 390px);
   object-fit: cover;
   display: block;
 }
@@ -132,7 +144,7 @@
   }
 
   .intro-company-right img {
-    height: clamp(300px, 32vw, 420px);
+    height: clamp(225px, 24vw, 315px);
   }
 }
 
@@ -168,6 +180,6 @@
   }
 
   .intro-company-right img {
-    height: 55vw;
+    height: 41.25vw;
   }
 }

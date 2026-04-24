@@ -9,6 +9,7 @@ type ProductItem = {
   contact?: string;
   price: string;
   status?: string;
+  badge?: "Hot" | null;
   image: string;
   alt: string;
 };
@@ -106,36 +107,55 @@ function MainProduct() {
   }, []);
 
   return (
-    <section
-      className="product-section"
-      style={{ marginTop: sectionOffset + 12 }}
-    >
-      {groups.map((group) => {
-        const state = scrollStates[group.id] ?? { atStart: true, atEnd: false };
-        return (
-          <article className="product-group" key={group.groupTitle}>
-            <h2 className="product-group-title">{group.groupTitle}</h2>
-            <div className="product-grid-wrapper">
-              <button
-                className={`product-grid-arrow product-grid-arrow--left${state.atStart ? " is-faded" : ""}`}
-                type="button"
-                onClick={() => scroll(group.id, "left")}
-                aria-label="Cuộn trái"
-              >
-                <FaArrowLeft />
-              </button>
+    <div className="main-product-page">
+      <section
+        className="product-section"
+        style={{ marginTop: sectionOffset + 12 }}
+      >
+        {groups.map((group) => {
+          const state = scrollStates[group.id] ?? {
+            atStart: true,
+            atEnd: false,
+          };
+          const visibleProducts = group.products
+            .filter(
+              (product) =>
+                product.badge === "Hot" && product.status !== "Đã bán",
+            )
+            .sort((a, b) => b.id.localeCompare(a.id));
+          const isCompactLayout = visibleProducts.length <= 3;
+
+          if (visibleProducts.length === 0) {
+            return null;
+          }
+
+          return (
+            <article className="product-group" key={group.groupTitle}>
+              <h2 className="product-group-title">{group.groupTitle}</h2>
               <div
-                className="product-grid"
-                ref={(el) => {
-                  gridRefs.current[group.id] = el;
-                }}
-                onScroll={(e) => updateScrollState(group.id, e.currentTarget)}
+                className={`product-grid-wrapper${isCompactLayout ? " is-compact" : ""}`}
               >
-                {group.products
-                  .sort((a, b) => b.id.localeCompare(a.id))
-                  .map((product) => (
+                <button
+                  className={`product-grid-arrow product-grid-arrow--left${state.atStart ? " is-faded" : ""}`}
+                  type="button"
+                  onClick={() => scroll(group.id, "left")}
+                  aria-label="Cuộn trái"
+                >
+                  <FaArrowLeft />
+                </button>
+                <div
+                  className={`product-grid${isCompactLayout ? " is-compact" : ""}`}
+                  ref={(el) => {
+                    gridRefs.current[group.id] = el;
+                  }}
+                  onScroll={(e) => updateScrollState(group.id, e.currentTarget)}
+                >
+                  {visibleProducts.map((product) => (
                     <div className="product-card" key={product.id}>
                       <div className="product-card-image-wrap">
+                        {product.badge === "Hot" && (
+                          <span className="product-card-badge">HOT</span>
+                        )}
                         <img
                           src={toPublicPath(product.image)}
                           alt={product.alt}
@@ -169,26 +189,27 @@ function MainProduct() {
                       </div>
                     </div>
                   ))}
+                </div>
+                <button
+                  className={`product-grid-arrow product-grid-arrow--right${state.atEnd ? " is-faded" : ""}`}
+                  type="button"
+                  onClick={() => scroll(group.id, "right")}
+                  aria-label="Cuộn phải"
+                >
+                  <FaArrowRight />
+                </button>
               </div>
-              <button
-                className={`product-grid-arrow product-grid-arrow--right${state.atEnd ? " is-faded" : ""}`}
-                type="button"
-                onClick={() => scroll(group.id, "right")}
-                aria-label="Cuộn phải"
-              >
-                <FaArrowRight />
+              <button className="product-group-btn" type="button">
+                <span className="product-group-btn-label">Xem tất cả</span>
+                <span className="product-group-btn-icon" aria-hidden="true">
+                  <FaArrowRight />
+                </span>
               </button>
-            </div>
-            <button className="product-group-btn" type="button">
-              <span className="product-group-btn-label">Xem tất cả</span>
-              <span className="product-group-btn-icon" aria-hidden="true">
-                <FaArrowRight />
-              </span>
-            </button>
-          </article>
-        );
-      })}
-    </section>
+            </article>
+          );
+        })}
+      </section>
+    </div>
   );
 }
 

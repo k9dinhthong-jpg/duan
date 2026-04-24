@@ -39,21 +39,21 @@
 }
 
 .contact-btn.wechat {
-  background: #07c160;
-  color: #fff;
-  font-size: 1.3vw;
+  background: #fff;
+  color: #07c160;
+  font-size: 1.7vw;
 }
 
 .contact-btn.telegram {
   background: #27a7e7;
   color: #fff;
-  font-size: 1.3vw;
+  font-size: 1.7vw;
 }
 
 .contact-btn.tiktok {
   background: #111111;
   color: #fff;
-  font-size: 1.2vw;
+  font-size: 1.5vw;
 }
 
 .contact-btn.phone {

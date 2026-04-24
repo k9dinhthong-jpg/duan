@@ -1,12 +1,14 @@
 .featured-news {
+  width: 80%;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   margin: 0 auto;
   padding: 3vw 0;
 }
 
 .featured-news-title {
+  text-align: center;
   margin: 0 0 1.4vw;
   font-size: clamp(24px, 2vw, 36px);
   font-weight: 700;
@@ -15,12 +17,13 @@
 }
 
 .featured-news-grid {
+  width: 100%;
   margin: 0;
   padding: 0;
   list-style: none;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.4vw;
+  gap: clamp(14px, 1.4vw, 26px);
 }
 
 .featured-news-card {

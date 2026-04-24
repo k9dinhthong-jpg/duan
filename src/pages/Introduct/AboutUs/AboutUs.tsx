@@ -1,20 +1,121 @@
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import "./AboutUs.css";
 import { toPublicPath } from "../../../utils/publicPath";
 
+type CompanyData = {
+  name?: string;
+  shortName?: string;
+  phone?: string;
+  address?: string;
+  email?: string;
+  website?: string;
+};
+
+function ensureHttp(url?: string) {
+  if (!url) return "";
+  if (/^https?:\/\//i.test(url)) return url;
+  return `https://${url}`;
+}
+
+function sanitizeTel(phone?: string) {
+  return (phone ?? "").replace(/\s+/g, "");
+}
+
+const milestones = [
+  {
+    year: "2016",
+    title: "Khởi đầu hoạt động",
+    description:
+      "Xây dựng đội ngũ kỹ thuật và thiết lập hệ thống cung ứng máy công trình tại khu vực miền Bắc.",
+  },
+  {
+    year: "2019",
+    title: "Mở rộng danh mục",
+    description:
+      "Mở rộng thêm nhiều dòng máy xúc và máy công trình đáp ứng đa dạng nhu cầu công trình.",
+  },
+  {
+    year: "2022",
+    title: "Nâng cấp dịch vụ hậu mãi",
+    description:
+      "Chuẩn hóa quy trình bảo hành, sửa chữa và cung cấp phụ tùng chính hãng trên toàn quốc.",
+  },
+  {
+    year: "2026",
+    title: "Tăng tốc số hóa",
+    description:
+      "Đầu tư nền tảng tư vấn trực tuyến và tối ưu trải nghiệm khách hàng đa kênh.",
+  },
+];
+
+const trustStats = [
+  { value: "10+", label: "Năm kinh nghiệm" },
+  { value: "1000+", label: "Khách hàng đã phục vụ" },
+  { value: "3000+", label: "Thiết bị đã bàn giao" },
+  { value: "24/7", label: "Hỗ trợ kỹ thuật" },
+];
+
 function AboutUs() {
+  const [companyData, setCompanyData] = useState<CompanyData>({
+    name: "Công Ty Xuất Nhập Khẩu Máy Công Trình Thuận Phát",
+    shortName: "MÁY CÔNG TRÌNH THUẬN PHÁT",
+    phone: "0966 121 686",
+    address: "Số 168 - Khu 4 - Xã Tề Lỗ - Tỉnh Phú Thọ",
+    email: "k9dinhthong@gmail.com",
+    website: "maycongtrinhthuanphat.com",
+  });
+
+  useEffect(() => {
+    async function fetchCompanyData() {
+      try {
+        const response = await fetch(
+          toPublicPath("data/Company/DataCompany.json"),
+        );
+        if (!response.ok) return;
+
+        const data = (await response.json()) as CompanyData;
+        setCompanyData((prev) => ({
+          name: data.name?.trim() || prev.name,
+          shortName:
+            data.shortName?.trim() || data.name?.trim() || prev.shortName,
+          phone: data.phone?.trim() || prev.phone,
+          address: data.address?.trim() || prev.address,
+          email: data.email?.trim() || prev.email,
+          website: data.website?.trim() || prev.website,
+        }));
+      } catch {
+        // Keep fallback values when loading fails.
+      }
+    }
+
+    fetchCompanyData();
+  }, []);
+
+  const websiteUrl = useMemo(
+    () => ensureHttp(companyData.website),
+    [companyData.website],
+  );
+
   return (
     <div className="aboutus-page">
-      {/* Banner Section */}
       <section className="aboutus-banner">
         <div className="aboutus-banner-content">
-          <h1>Về Công Ty Thuận Phát</h1>
+          <h1>Về {companyData.shortName}</h1>
           <p>
-            Tổng đại lý phân phối độc quyền máy công trình chất lượng hàng đầu
+            Đơn vị cung cấp máy công trình uy tín với dịch vụ hậu mãi chuyên sâu
           </p>
+          <div className="aboutus-banner-actions">
+            <Link to="/product" className="aboutus-banner-btn is-primary">
+              Xem sản phẩm
+            </Link>
+            <Link to="/contact" className="aboutus-banner-btn is-outline">
+              Nhận tư vấn ngay
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* Introduction Section */}
       <section className="aboutus-section">
         <div className="aboutus-container">
           <h2 className="aboutus-section-title">Giới Thiệu Công Ty</h2>
@@ -28,23 +129,35 @@ function AboutUs() {
             </div>
             <div className="aboutus-intro-right">
               <p className="aboutus-intro-text">
-                <strong>Công ty TNHH Sản xuất và Kinh doanh Thuận Phát</strong>{" "}
-                là tổng đại lý phân phối độc quyền máy xúc Hyundai tại Việt Nam.
-                Chúng tôi tự hào vì mang đến những sản phẩm chất lượng, giá tốt
-                để phục vụ mục đích sử dụng của khách hàng.
+                <strong>{companyData.name}</strong> chuyên cung cấp các dòng máy
+                công trình chất lượng cao, đáp ứng nhu cầu thi công và khai thác
+                tại nhiều lĩnh vực. Chúng tôi cam kết mang đến giải pháp phù hợp
+                với chi phí tối ưu cho từng khách hàng.
               </p>
               <p className="aboutus-intro-text">
-                Chúng tôi là công ty độc quyền cung cấp các sản phẩm máy công
-                trình bao gồm máy xúc đào bánh xích, máy xúc đào bánh lốp, máy
-                xúc đào mini, máy xúc đào tổng hợp, máy xúc lật. Rất hân hạnh
-                được hỗ trợ các khách hàng khi ghé xem.
+                Với đội ngũ giàu kinh nghiệm, hệ thống hậu mãi đồng bộ và quy
+                trình vận hành minh bạch, chúng tôi luôn đồng hành để khách hàng
+                vận hành thiết bị ổn định, bền bỉ và hiệu quả lâu dài.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Mission & Vision Section */}
+      <section className="aboutus-section aboutus-section-metrics">
+        <div className="aboutus-container">
+          <h2 className="aboutus-section-title">Con Số Tin Cậy</h2>
+          <div className="aboutus-metrics-grid">
+            {trustStats.map((item) => (
+              <div key={item.label} className="aboutus-metric-card">
+                <p className="aboutus-metric-value">{item.value}</p>
+                <p className="aboutus-metric-label">{item.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="aboutus-section aboutus-section-alt">
         <div className="aboutus-container">
           <h2 className="aboutus-section-title">Tầm Nhìn & Sứ Mệnh</h2>
@@ -77,7 +190,23 @@ function AboutUs() {
         </div>
       </section>
 
-      {/* Values Section */}
+      <section className="aboutus-section aboutus-section-timeline">
+        <div className="aboutus-container">
+          <h2 className="aboutus-section-title">Hành Trình Phát Triển</h2>
+          <div className="aboutus-timeline">
+            {milestones.map((item) => (
+              <article key={item.year} className="aboutus-timeline-item">
+                <div className="aboutus-timeline-year">{item.year}</div>
+                <div className="aboutus-timeline-content">
+                  <h3>{item.title}</h3>
+                  <p>{item.description}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="aboutus-section">
         <div className="aboutus-container">
           <h2 className="aboutus-section-title">Lợi Thế Cạnh Tranh</h2>
@@ -85,7 +214,7 @@ function AboutUs() {
             <div className="aboutus-feature-item">
               <h4>Sản Phẩm Chất Lượng</h4>
               <p>
-                Máy xúc và máy công trình đạt tiêu chuẩn quốc tế, bền bỏ, hiệu
+                Máy xúc và máy công trình đạt tiêu chuẩn quốc tế, bền bỉ, hiệu
                 suất cao.
               </p>
             </div>
@@ -107,39 +236,42 @@ function AboutUs() {
         </div>
       </section>
 
-      {/* Contact Section */}
       <section className="aboutus-section aboutus-section-contact">
         <div className="aboutus-container">
           <h2 className="aboutus-section-title">Liên Hệ Với Chúng Tôi</h2>
           <div className="aboutus-contact-info">
             <div className="aboutus-contact-item">
               <h4>📍 Địa Chỉ</h4>
-              <p>Số 168 - Khu 4 - Xã Tề Lỗ - Tỉnh Phú Thọ</p>
+              <p>{companyData.address}</p>
             </div>
             <div className="aboutus-contact-item">
               <h4>📞 Điện Thoại</h4>
               <p>
-                <a href="tel:0948299444">0948 299 444</a>
+                <a href={`tel:${sanitizeTel(companyData.phone)}`}>
+                  {companyData.phone}
+                </a>
               </p>
             </div>
             <div className="aboutus-contact-item">
               <h4>✉️ Email</h4>
               <p>
-                <a href="mailto:k9dinhthong@gmail.com">k9dinhthong@gmail.com</a>
+                <a href={`mailto:${companyData.email}`}>{companyData.email}</a>
               </p>
             </div>
             <div className="aboutus-contact-item">
               <h4>🌐 Website</h4>
               <p>
-                <a
-                  href="https://maycongtrinhthuanphat.com"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  maycongtrinhthuanphat.com
+                <a href={websiteUrl} target="_blank" rel="noreferrer">
+                  {companyData.website}
                 </a>
               </p>
             </div>
+          </div>
+
+          <div className="aboutus-contact-cta">
+            <Link to="/contact" className="aboutus-contact-btn">
+              Gửi yêu cầu tư vấn
+            </Link>
           </div>
         </div>
       </section>

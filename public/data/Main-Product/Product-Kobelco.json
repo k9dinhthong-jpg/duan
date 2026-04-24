@@ -5,91 +5,101 @@
   "products": [
     {
       "id": "Kobelco01",
-      "name": "Máy xúc đào Kobelco SK200-10",
+      "name": "Kobelco SK200-10",
       "contact": "0948.299.444",
       "status": "Còn hàng",
       "price": "",
+      "badge": "Hot",
       "image": "/img/Product/Kobelco/Kobelco01.png",
       "alt": "Kobelco"
     },
     {
       "id": "Kobelco02",
-      "name": "Máy xúc đào Kobelco SK330-10",
+      "name": "Kobelco SK330-10",
       "contact": "0948.299.444",
       "status": "Còn hàng",
       "price": "",
+      "badge": "Hot",
       "image": "/img/Product/Kobelco/Kobelco02.png",
       "alt": "Kobelco"
     },
     {
       "id": "Kobelco03",
-      "name": "Máy xúc đào Kobelco SK350-10",
+      "name": "Kobelco SK350-10",
       "contact": "0948.299.444",
       "status": "Còn hàng",
       "price": "",
+      "badge": "Hot",
       "image": "/img/Product/Kobelco/Kobelco03.png",
       "alt": "Kobelco"
     },
     {
       "id": "Kobelco04",
-      "name": "Máy xúc đào Kobelco SK500-10",
+      "name": "Kobelco SK500-10",
       "contact": "0948.299.444",
       "status": "Còn hàng",
       "price": "",
+      "badge": "Hot",
       "image": "/img/Product/Kobelco/Kobelco04.png",
       "alt": "Kobelco"
     },
     {
       "id": "Kobelco05",
-      "name": "Máy xúc đào Kobelco SK130-10",
+      "name": "Kobelco SK130-10",
       "contact": "0948.299.444",
       "status": "Còn hàng",
       "price": "",
+      "badge": "Hot",
       "image": "/img/Product/Kobelco/Kobelco05.png",
       "alt": "Kobelco"
     },
     {
       "id": "Kobelco06",
-      "name": "Máy xúc đào Kobelco SK140-10",
+      "name": "Kobelco SK140-10",
       "contact": "0948.299.444",
       "status": "Còn hàng",
       "price": "",
+      "badge": null,
       "image": "/img/Product/Kobelco/Kobelco06.png",
       "alt": "Kobelco"
     },
     {
       "id": "Kobelco07",
-      "name": "Máy xúc đào Kobelco SK210-10",
+      "name": "Kobelco SK210-10",
       "contact": "0948.299.444",
       "status": "Còn hàng",
       "price": "",
+      "badge": null,
       "image": "/img/Product/Kobelco/Kobelco07.png",
       "alt": "Kobelco"
     },
     {
       "id": "Kobelco08",
-      "name": "Máy xúc đào Kobelco SK380-10",
+      "name": "Kobelco SK380-10",
       "contact": "0948.299.444",
       "status": "Còn hàng",
       "price": "",
+      "badge": null,
       "image": "/img/Product/Kobelco/Kobelco08.png",
       "alt": "Kobelco"
     },
     {
       "id": "Kobelco09",
-      "name": "Máy xúc đào Kobelco SK480-10",
+      "name": "Kobelco SK480-10",
       "contact": "0948.299.444",
       "status": "Còn hàng",
       "price": "",
+      "badge": null,
       "image": "/img/Product/Kobelco/Kobelco09.png",
       "alt": "Kobelco"
     },
     {
       "id": "Kobelco10",
-      "name": "Máy xúc đào Kobelco SK850-10",
+      "name": "Kobelco SK850-10",
       "contact": "0948.299.444",
       "status": "Còn hàng",
       "price": "",
+      "badge": null,
       "image": "/img/Product/Kobelco/Kobelco10.png",
       "alt": "Kobelco"
     }

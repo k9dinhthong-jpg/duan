@@ -8,14 +8,84 @@ import {
   FaPhoneAlt,
 } from "react-icons/fa";
 import { FaTiktok } from "react-icons/fa6";
+import { useEffect, useMemo, useState } from "react";
 import "./Footer.css";
+import { toPublicPath } from "../../../utils/publicPath";
+
+type CompanyData = {
+  name?: string;
+  shortName?: string;
+  phone?: string;
+  address?: string;
+  email?: string;
+  website?: string;
+  facebook?: string;
+  tiktok?: string;
+  instagram?: string;
+};
+
+function ensureHttp(url?: string) {
+  if (!url) return "";
+  if (/^https?:\/\//i.test(url)) return url;
+  return `https://${url}`;
+}
+
+function sanitizeTel(phone?: string) {
+  return (phone ?? "").replace(/\s+/g, "");
+}
 
 function Footer() {
+  const [companyData, setCompanyData] = useState<CompanyData>({
+    name: "Thuận Phát Máy Công Trình",
+    shortName: "Thuận Phát Máy Công Trình",
+    phone: "0948 299 444",
+    address: "Số 168 - Khu 4 - Xã Tề Lỗ - Tỉnh Phú Thọ",
+    email: "k9dinhthong@gmail.com",
+    website: "maycongtrinhthuanphat.com",
+    facebook: "#",
+    tiktok: "#",
+    instagram: "#",
+  });
+
+  useEffect(() => {
+    async function fetchCompanyData() {
+      try {
+        const response = await fetch(
+          toPublicPath("data/Company/DataCompany.json"),
+        );
+        if (!response.ok) return;
+        const data = (await response.json()) as CompanyData;
+
+        setCompanyData((prev) => ({
+          name: data.name?.trim() || prev.name,
+          shortName:
+            data.shortName?.trim() || data.name?.trim() || prev.shortName,
+          phone: data.phone?.trim() || prev.phone,
+          address: data.address?.trim() || prev.address,
+          email: data.email?.trim() || prev.email,
+          website: data.website?.trim() || prev.website,
+          facebook: data.facebook?.trim() || prev.facebook,
+          tiktok: data.tiktok?.trim() || prev.tiktok,
+          instagram: data.instagram?.trim() || prev.instagram,
+        }));
+      } catch {
+        // Keep fallback values when loading fails.
+      }
+    }
+
+    fetchCompanyData();
+  }, []);
+
+  const websiteUrl = useMemo(
+    () => ensureHttp(companyData.website),
+    [companyData.website],
+  );
+
   return (
     <div className="site-footer">
       <section className="footer-top">
         <div className="footer-col footer-company">
-          <h3 className="footer-heading">Thuận Phát Máy Công Trình</h3>
+          <h3 className="footer-heading">{companyData.shortName}</h3>
           <p className="footer-text">
             Công ty TNHH sản xuất kinh doanh xuất nhập khẩu <br /> máy công
             trình Thuận Phát.
@@ -23,24 +93,22 @@ function Footer() {
           <ul className="footer-contact-list">
             <li>
               <FaMapMarkerAlt />
-              <span>Số 168 - Khu 4 - Xã Tề Lỗ - Tỉnh Phú Thọ</span>
+              <span>{companyData.address}</span>
             </li>
             <li>
               <FaPhoneAlt />
-              <a href="tel:0948299444">0948 299 444</a>
+              <a href={`tel:${sanitizeTel(companyData.phone)}`}>
+                {companyData.phone}
+              </a>
             </li>
             <li>
               <FaEnvelope />
-              <a href="mailto:k9dinhthong@gmail.com">k9dinhthong@gmail.com</a>
+              <a href={`mailto:${companyData.email}`}>{companyData.email}</a>
             </li>
             <li>
               <FaGlobe />
-              <a
-                href="https://maycongtrinhthuanphat.com"
-                target="_blank"
-                rel="noreferrer"
-              >
-                maycongtrinhthuanphat.com
+              <a href={websiteUrl} target="_blank" rel="noreferrer">
+                {companyData.website}
               </a>
             </li>
           </ul>
@@ -106,17 +174,17 @@ function Footer() {
           <nav aria-label="Mang xa hoi">
             <ul className="footer-social-list">
               <li>
-                <a href="#" aria-label="Facebook">
+                <a href={companyData.facebook} aria-label="Facebook">
                   <FaFacebookF />
                 </a>
               </li>
               <li>
-                <a href="#" aria-label="Instagram">
+                <a href={companyData.instagram} aria-label="Instagram">
                   <FaInstagram />
                 </a>
               </li>
               <li>
-                <a href="#" aria-label="TikTok">
+                <a href={companyData.tiktok} aria-label="TikTok">
                   <FaTiktok />
                 </a>
               </li>
@@ -127,7 +195,7 @@ function Footer() {
 
       <section className="footer-bottom">
         <div>
-          Copyright © Thuận Phát Máy Công Trình 2026. All rights reserved.
+          Copyright © {companyData.shortName} 2026. All rights reserved.
         </div>
       </section>
     </div>

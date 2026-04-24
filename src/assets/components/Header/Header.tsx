@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
 import { FaBars, FaCaretDown, FaSearch, FaTimes } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import "./Header.css";
 import { toPublicPath } from "../../../utils/publicPath";
+
+type CompanyData = {
+  name?: string;
+  phone?: string;
+};
 
 const productItem = [
   { id: 1, name: "MÁY CÔNG TRÌNH HITACHI", link: "/product/hitachi" },
@@ -11,9 +16,9 @@ const productItem = [
 ];
 
 const serviceItem = [
-  { id: 1, name: "KIỂM TRA BẢO HÀNH" },
-  { id: 2, name: "DỊCH VỤ SỬA CHỮA" },
-  { id: 3, name: "THUÊ MÁY CÔNG TRÌNH" },
+  { id: 1, name: "KIỂM TRA BẢO HÀNH", link: "/services/warranty" },
+  { id: 2, name: "DỊCH VỤ SỬA CHỮA", link: "/services/repair" },
+  { id: 3, name: "THUÊ MÁY CÔNG TRÌNH", link: "/services/rent" },
 ];
 
 const introductionItem = [
@@ -23,10 +28,44 @@ const introductionItem = [
 ];
 
 function Header() {
+  const { pathname } = useLocation();
+
+  const isHomeActive = pathname === "/" || pathname === "/home";
+  const isProductActive =
+    pathname === "/product" || pathname.startsWith("/product/");
+  const isServiceActive = pathname.startsWith("/services/");
+  const isIntroActive = pathname.startsWith("/about-us");
+  const isNewsActive = pathname === "/news" || pathname.startsWith("/news/");
+  const isContactActive = pathname.startsWith("/contact");
+
+  const [companyData, setCompanyData] = useState<CompanyData>({
+    name: "MÁY CÔNG TRÌNH THUẬN PHÁT",
+    phone: "0948 299 444",
+  });
   const [bannerHeight, setBannerHeight] = useState(0);
   const [navGap, setNavGap] = useState(0);
   const [navTop, setNavTop] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  useEffect(() => {
+    async function fetchCompanyData() {
+      try {
+        const response = await fetch(
+          toPublicPath("data/Company/DataCompany.json"),
+        );
+        if (!response.ok) return;
+        const data = (await response.json()) as CompanyData;
+        setCompanyData((prev) => ({
+          name: data.name?.trim() || prev.name,
+          phone: data.phone?.trim() || prev.phone,
+        }));
+      } catch {
+        // Keep fallback values when loading fails.
+      }
+    }
+
+    fetchCompanyData();
+  }, []);
 
   useEffect(() => {
     function updateMeasurements() {
@@ -82,12 +121,15 @@ function Header() {
       <div className="header-banner">
         <div className="banner-left">
           <p className="banner-kicker">CÔNG TY XUẤT NHẬP KHẨU</p>
-          <h1 className="banner-title">MÁY CÔNG TRÌNH THUẬN PHÁT</h1>
+          <h1 className="banner-title">{companyData.name}</h1>
         </div>
         <div className="banner-right">
           <p className="banner-hotline-label">TƯ VẤN NHANH 24/7</p>
-          <a className="banner-hotline-value" href="tel:0948299444">
-            0948 299 444
+          <a
+            className="banner-hotline-value"
+            href={`tel:${(companyData.phone ?? "").replace(/\s+/g, "")}`}
+          >
+            {companyData.phone}
           </a>
         </div>
       </div>
@@ -111,18 +153,21 @@ function Header() {
           className={`nav-menu ${isMenuOpen ? "is-open" : ""}`}
           id="site-nav-menu"
         >
-          <li>
+          <li className={isHomeActive ? "is-active" : ""}>
             <Link to="/home" onClick={() => setIsMenuOpen(false)}>
               TRANG CHỦ
             </Link>
           </li>
-          <li className="product-menu">
+          <li className={`product-menu ${isProductActive ? "is-active" : ""}`}>
             <Link to="/product" onClick={() => setIsMenuOpen(false)}>
               SẢN PHẨM <FaCaretDown />
             </Link>
             <ul className="product-menu-item">
               {productItem.map((item) => (
-                <li key={item.id}>
+                <li
+                  key={item.id}
+                  className={pathname.startsWith(item.link) ? "is-active" : ""}
+                >
                   <Link to={item.link} onClick={() => setIsMenuOpen(false)}>
                     {item.name}
                   </Link>
@@ -130,25 +175,16 @@ function Header() {
               ))}
             </ul>
           </li>
-          <li className="product-menu">
-            <a href="#">
+          <li className={`product-menu ${isServiceActive ? "is-active" : ""}`}>
+            <Link to="/services/warranty" onClick={() => setIsMenuOpen(false)}>
               DỊCH VỤ <FaCaretDown />
-            </a>
+            </Link>
             <ul className="product-menu-item">
               {serviceItem.map((item) => (
-                <li key={item.id}>
-                  <a href="#">{item.name}</a>
-                </li>
-              ))}
-            </ul>
-          </li>
-          <li className="product-menu">
-            <a href="#">
-              GIỚI THIỆU <FaCaretDown />
-            </a>
-            <ul className="product-menu-item">
-              {introductionItem.map((item) => (
-                <li key={item.id}>
+                <li
+                  key={item.id}
+                  className={pathname.startsWith(item.link) ? "is-active" : ""}
+                >
                   <Link to={item.link} onClick={() => setIsMenuOpen(false)}>
                     {item.name}
                   </Link>
@@ -156,12 +192,29 @@ function Header() {
               ))}
             </ul>
           </li>
-          <li>
+          <li className={`product-menu ${isIntroActive ? "is-active" : ""}`}>
+            <Link to="/about-us" onClick={() => setIsMenuOpen(false)}>
+              GIỚI THIỆU <FaCaretDown />
+            </Link>
+            <ul className="product-menu-item">
+              {introductionItem.map((item) => (
+                <li
+                  key={item.id}
+                  className={pathname.startsWith(item.link) ? "is-active" : ""}
+                >
+                  <Link to={item.link} onClick={() => setIsMenuOpen(false)}>
+                    {item.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </li>
+          <li className={isNewsActive ? "is-active" : ""}>
             <Link to="/news" onClick={() => setIsMenuOpen(false)}>
               TIN TỨC
             </Link>
           </li>
-          <li>
+          <li className={isContactActive ? "is-active" : ""}>
             <Link to="/contact" onClick={() => setIsMenuOpen(false)}>
               LIÊN HỆ
             </Link>
@@ -169,17 +222,23 @@ function Header() {
         </ul>
 
         <div className="nav-search-mobile">
-          <div className="search-box">
-            <FaSearch className="search-icon" aria-hidden="true" />
+          <form
+            className="search-box"
+            role="search"
+            onSubmit={(e) => e.preventDefault()}
+          >
             <input
               className="find-text"
-              type="text"
+              type="search"
               name="find-text"
               id="find-text"
-              placeholder="Tìm kiếm sản phẩm..."
+              placeholder="Tìm kiếm..."
               aria-label="Tìm kiếm"
             />
-          </div>
+            <button className="search-btn" type="submit" aria-label="Tìm kiếm">
+              <FaSearch aria-hidden="true" />
+            </button>
+          </form>
         </div>
       </nav>
     </>

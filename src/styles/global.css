@@ -1,11 +1,15 @@
 /* Style chung cho body,a ,ul,img,... */
 html {
+  width: var(--app-frame-width);
+  max-width: var(--viewport-safe-width);
   font-size: clamp(14px, 0.9vw, 18px);
   scroll-behavior: smooth;
+  overflow-x: clip;
 }
 
 body {
-  width: 100%;
+  width: var(--app-frame-width);
+  max-width: var(--viewport-safe-width);
   margin: 0;
   font-family: var(--font-family-base);
   font-size: var(--font-size-base);
@@ -14,10 +18,20 @@ body {
   letter-spacing: 0.01em;
   color: var(--color-text);
   background: var(--color-bg);
+  overflow-x: clip;
 }
 
 #root {
+  width: var(--app-frame-width);
+  max-width: var(--viewport-safe-width);
   min-height: 100vh;
+  margin-inline: auto;
+}
+
+#root > section,
+#root main {
+  width: var(--app-frame-width);
+  max-width: var(--viewport-safe-width);
 }
 
 h1,

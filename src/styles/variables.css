@@ -32,6 +32,9 @@
 }
 
 :root {
+  --viewport-safe-width: 100vw;
+  --app-frame-width: min(100%, var(--viewport-safe-width));
+
   --font-family-base:
     "Be Vietnam Pro", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 
@@ -84,5 +87,4 @@
   --radius-pill: 999px;
   --shadow-sm: 0 0.1vw 0.42vw rgba(20, 34, 67, 0.08);
   --shadow-md: 0 0.42vw 0.95vw rgba(20, 34, 67, 0.12);
-
 }

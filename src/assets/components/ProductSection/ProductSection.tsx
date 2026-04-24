@@ -9,6 +9,7 @@ type ProductItem = {
   contact?: string;
   price: string;
   status?: string;
+  badge?: "Hot" | null;
   image: string;
   alt: string;
 };
@@ -64,17 +65,32 @@ function ProductSection() {
   }, []);
 
   return (
-    <section className="product-section">
-      {productGroups.map((group) => (
-        <article className="product-group" key={group.groupTitle}>
-          <h2 className="product-group-title">{group.groupTitle}</h2>
-          <div className="product-grid">
-            {group.products
-              .sort((a, b) => b.id.localeCompare(a.id))
-              .slice(0, itemsToShow)
-              .map((product) => (
+    <section className="product-section home-product-section">
+      {productGroups.map((group) => {
+        const visibleProducts = group.products
+          .filter(
+            (product) => product.badge === "Hot" && product.status !== "Đã bán",
+          )
+          .sort((a, b) => b.id.localeCompare(a.id))
+          .slice(0, itemsToShow);
+
+        if (visibleProducts.length === 0) {
+          return null;
+        }
+
+        return (
+          <article className="product-group" key={group.groupTitle}>
+            <header className="product-group-heading">
+              <h2 className="product-group-title">{group.groupTitle}</h2>
+              <p className="product-group-subtitle">SẢN PHẨM NỔI BẬT</p>
+            </header>
+            <div className="product-grid">
+              {visibleProducts.map((product) => (
                 <div className="product-card" key={product.id}>
                   <div className="product-card-image-wrap">
+                    {product.badge === "Hot" && (
+                      <span className="product-card-badge">HOT</span>
+                    )}
                     <img src={toPublicPath(product.image)} alt={product.alt} />
                   </div>
                   <div className="product-card-content">
@@ -89,12 +105,6 @@ function ProductSection() {
                         {product.status ?? "Còn hàng"}
                       </span>
                     </p>
-                    {/* <p className="product-card-meta">
-                    <span className="product-card-meta-label">Giá:</span>{" "}
-                    {product.price.trim()
-                      ? product.price
-                      : "Liên hệ người bán để cập nhật giá"}
-                  </p> */}
                     <p className="product-card-meta">
                       <span className="product-card-meta-label">Liên hệ:</span>{" "}
                       {product.contact ?? "Liên hệ để biết giá"}
@@ -105,15 +115,16 @@ function ProductSection() {
                   </div>
                 </div>
               ))}
-          </div>
-          <button className="product-group-btn" type="button">
-            <span className="product-group-btn-label">Xem tất cả</span>
-            <span className="product-group-btn-icon" aria-hidden="true">
-              <FaArrowRight />
-            </span>
-          </button>
-        </article>
-      ))}
+            </div>
+            <button className="product-group-btn" type="button">
+              <span className="product-group-btn-label">Xem tất cả</span>
+              <span className="product-group-btn-icon" aria-hidden="true">
+                <FaArrowRight />
+              </span>
+            </button>
+          </article>
+        );
+      })}
     </section>
   );
 }

@@ -9,6 +9,7 @@ type ProductItem = {
   contact?: string;
   price: string;
   status?: string;
+  badge?: "Hot" | null;
   image: string;
   alt: string;
 };
@@ -110,8 +111,9 @@ function SelectProduct() {
         normalizedQuery.length === 0 ||
         product.name.toLowerCase().includes(normalizedQuery) ||
         product.id.toLowerCase().includes(normalizedQuery);
+      const byBadge = product.badge === "Hot" && currentStatus !== "Đã bán";
 
-      return byName && byStatus && bySearch;
+      return byName && byStatus && bySearch && byBadge;
     });
   }, [searchQuery, selectedName, selectedStatus, sortedProducts]);
 
@@ -176,6 +178,9 @@ function SelectProduct() {
         {filteredProducts.map((product) => (
           <article className="product-card" key={product.id}>
             <div className="product-card__image-wrap">
+              {product.badge === "Hot" && (
+                <span className="product-card__badge">HOT</span>
+              )}
               <img
                 className="product-card__image"
                 src={toPublicPath(product.image)}
