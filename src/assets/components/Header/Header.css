@@ -118,15 +118,6 @@
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.88);
 }
 
-.lang-text {
-  letter-spacing: 0.02em;
-}
-
-.lang-flag {
-  font-size: 11px;
-  line-height: 1;
-}
-
 @media (max-width: 1500px) and (min-width: 901px) {
   .header-banner {
     padding-right: 5%;
@@ -155,10 +146,6 @@
     padding: 3px 4px;
     gap: 3px;
   }
-
-  .lang-flag {
-    font-size: 9px;
-  }
 }
 
 @media (min-width: 769px) and (max-width: 886px) {
@@ -167,8 +154,8 @@
   }
 
   .banner-language {
-    top: 0;
-    bottom: 0;
+    top: 2px;
+    bottom: 2px;
     transform: none;
     justify-content: center;
     gap: 3px;
@@ -180,10 +167,6 @@
     font-size: 8px;
     padding: 3px 4px;
     gap: 2px;
-  }
-
-  .lang-flag {
-    font-size: 9px;
   }
 
   .banner-right {
@@ -470,10 +453,6 @@
 
 .product-menu:focus-within > a svg {
   transform: translateY(-0.04em) rotate(180deg);
-}
-
-.search-item {
-  padding: 0;
 }
 
 .nav-search-mobile {
@@ -773,9 +752,5 @@
     min-width: 36px;
     font-size: 8px;
     padding: 3px 4px;
-  }
-
-  .lang-flag {
-    font-size: 9px;
   }
 }

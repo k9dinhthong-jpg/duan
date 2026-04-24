@@ -9,8 +9,8 @@
 }
 
 .contact-btn {
-  width: 3vw;
-  height: 3vw;
+  width: clamp(40px, 3vw, 48px);
+  height: clamp(40px, 3vw, 48px);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -32,8 +32,8 @@
 }
 
 .contact-btn.zalo img {
-  width: 2.2vw;
-  height: 2.2vw;
+  width: clamp(30px, 2.2vw, 36px);
+  height: clamp(30px, 2.2vw, 36px);
   border-radius: 50%;
   object-fit: contain;
 }
@@ -41,25 +41,25 @@
 .contact-btn.wechat {
   background: #fff;
   color: #07c160;
-  font-size: 1.7vw;
+  font-size: clamp(20px, 1.7vw, 25px);
 }
 
 .contact-btn.telegram {
   background: #27a7e7;
   color: #fff;
-  font-size: 1.7vw;
+  font-size: clamp(20px, 1.7vw, 25px);
 }
 
 .contact-btn.tiktok {
   background: #111111;
   color: #fff;
-  font-size: 1.5vw;
+  font-size: clamp(18px, 1.5vw, 22px);
 }
 
 .contact-btn.phone {
   background: #e53935;
   color: #fff;
-  font-size: 1.4vw;
+  font-size: clamp(17px, 1.4vw, 21px);
   position: relative;
   animation: phone-shake 1.2s infinite;
 }
