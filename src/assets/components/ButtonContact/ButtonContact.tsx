@@ -4,7 +4,7 @@ import "./ButtonContact.css";
 
 function ButtonContact() {
   return (
-    <>
+    <div>
       <section>
         <div className="contact-fixed">
           <a
@@ -53,7 +53,7 @@ function ButtonContact() {
           </a>
         </div>
       </section>
-    </>
+    </div>
   );
 }
 export default ButtonContact;

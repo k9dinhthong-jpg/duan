@@ -1,0 +1,225 @@
+.aboutus-page {
+  width: 100%;
+}
+
+/* Banner Section */
+.aboutus-banner {
+  width: 100%;
+  background: linear-gradient(135deg, #0c1e45 0%, #1a2f5c 100%);
+  padding: calc(var(--site-nav-gap, 0px) + clamp(32px, 5vw, 80px)) 2rem;
+  text-align: center;
+  color: #fff;
+}
+
+.aboutus-banner-content h1 {
+  font-size: clamp(28px, 4vw, 48px);
+  margin: 0 0 0.5rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.aboutus-banner-content p {
+  font-size: clamp(16px, 1.2vw, 20px);
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Main Container */
+.aboutus-container {
+  width: min(1200px, 100% - 2rem);
+  margin: 0 auto;
+}
+
+/* Section Styling */
+.aboutus-section {
+  padding: clamp(3rem, 8vw, 5rem) 1rem;
+  background: #fff;
+}
+
+.aboutus-section-alt {
+  background: #f8f9fc;
+}
+
+.aboutus-section-contact {
+  background: linear-gradient(135deg, #f0f3f8 0%, #e8ecf4 100%);
+}
+
+.aboutus-section-title {
+  font-size: clamp(28px, 3vw, 42px);
+  text-align: center;
+  margin: 0 0 2.5rem;
+  color: #0c1e45;
+  font-weight: 700;
+}
+
+/* Introduction Content */
+.aboutus-intro-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.aboutus-intro-left {
+  width: 100%;
+}
+
+.aboutus-intro-image {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  display: block;
+}
+
+.aboutus-intro-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.aboutus-intro-text {
+  font-size: clamp(15px, 1.1vw, 18px);
+  line-height: 1.7;
+  color: #555;
+  margin: 0;
+}
+
+.aboutus-intro-text strong {
+  color: #0c1e45;
+  font-weight: 700;
+}
+
+/* Cards Grid */
+.aboutus-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.75rem;
+}
+
+.aboutus-card {
+  background: #fff;
+  padding: 1.75rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  text-align: center;
+}
+
+.aboutus-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.aboutus-card-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+.aboutus-card h3 {
+  font-size: clamp(18px, 1.3vw, 22px);
+  margin: 0 0 0.75rem;
+  color: #0c1e45;
+  font-weight: 700;
+}
+
+.aboutus-card p {
+  font-size: clamp(14px, 1vw, 16px);
+  line-height: 1.6;
+  color: #666;
+  margin: 0;
+}
+
+/* Features Grid */
+.aboutus-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.aboutus-feature-item {
+  padding: 1.5rem;
+  background: #fff;
+  border-radius: 12px;
+  border-left: 4px solid #5f6ca3;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.aboutus-feature-item h4 {
+  font-size: clamp(16px, 1.2vw, 20px);
+  margin: 0 0 0.75rem;
+  color: #0c1e45;
+  font-weight: 700;
+}
+
+.aboutus-feature-item p {
+  font-size: clamp(14px, 1vw, 16px);
+  line-height: 1.6;
+  color: #666;
+  margin: 0;
+}
+
+/* Contact Info Grid */
+.aboutus-contact-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.aboutus-contact-item {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.aboutus-contact-item h4 {
+  font-size: clamp(16px, 1.2vw, 18px);
+  margin: 0 0 0.75rem;
+  color: #0c1e45;
+  font-weight: 600;
+}
+
+.aboutus-contact-item p {
+  font-size: clamp(14px, 1vw, 16px);
+  color: #666;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.aboutus-contact-item a {
+  color: #5f6ca3;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.aboutus-contact-item a:hover {
+  color: #0c1e45;
+  text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .aboutus-intro-content {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .aboutus-section-title {
+    margin-bottom: 1.75rem;
+  }
+
+  .aboutus-cards,
+  .aboutus-features,
+  .aboutus-contact-info {
+    gap: 1.25rem;
+  }
+
+  .aboutus-banner {
+    padding: calc(var(--site-nav-gap, 0px) + clamp(24px, 3vw, 40px)) 1.25rem;
+  }
+}

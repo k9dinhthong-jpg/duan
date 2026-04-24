@@ -1,0 +1,140 @@
+.hitachi-page {
+  width: min(100%, 1600px);
+  margin-inline: auto;
+  padding: 0 clamp(16px, 1.6vw, 28px) clamp(24px, 2.5vw, 40px);
+}
+
+.hitachi-page__title {
+  justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  margin: 0 auto clamp(16px, 1.4vw, 24px);
+  padding: 0.5rem 1.2rem;
+  border-radius: 999px;
+  border: 1px solid #d8deed;
+  background: #ffffff;
+  box-shadow: 0 0.2vw 0.7vw rgba(44, 56, 97, 0.08);
+  font-size: clamp(24px, 1.35vw, 32px);
+  font-weight: 700;
+  color: #263150;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
+.hitachi-page__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(10px, 0.8vw, 14px);
+}
+
+.hitachi-card {
+  border: 1px solid #d8d8d8;
+  background: #ffffff;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.hitachi-card__image-wrap {
+  overflow: hidden;
+  border-bottom: 1px solid #d8d8d8;
+}
+
+.hitachi-card__image {
+  width: 100%;
+  height: clamp(126px, 11vw, 176px);
+  display: block;
+  object-fit: cover;
+  object-position: center;
+}
+
+.hitachi-card__content {
+  display: grid;
+  justify-items: center;
+  gap: clamp(4px, 0.35vw, 8px);
+  padding: clamp(10px, 0.75vw, 13px) clamp(8px, 0.65vw, 11px)
+    clamp(12px, 0.85vw, 15px);
+  min-width: 0;
+}
+
+.hitachi-card__name {
+  margin: 0;
+  font-size: clamp(14px, 0.92vw, 19px);
+  line-height: 1.22;
+  font-weight: 500;
+  color: #272727;
+  text-align: center;
+}
+
+.hitachi-card__meta {
+  margin: 0;
+  font-size: clamp(11px, 0.72vw, 14px);
+  line-height: 1.52;
+  color: #3c4354;
+  text-align: center;
+}
+
+.hitachi-card__meta-label {
+  font-weight: 700;
+}
+
+.hitachi-card__status {
+  font-weight: 700;
+}
+
+.hitachi-card__status.is-available {
+  color: #1d8f4d;
+}
+
+.hitachi-card__status.is-sold {
+  color: #d13b3b;
+}
+
+.hitachi-card__btn {
+  margin-top: clamp(2px, 0.2vw, 4px);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #6676b6, #4d5d9f);
+  color: #ffffff;
+  font-size: clamp(11px, 0.78vw, 14px);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.42rem 1rem;
+  cursor: pointer;
+  box-shadow: 0 0.4vw 1vw rgba(77, 93, 159, 0.22);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.hitachi-card__btn:hover {
+  transform: translateY(-0.1vw);
+  box-shadow: 0 0.65vw 1.35vw rgba(77, 93, 159, 0.28);
+  background: linear-gradient(135deg, #5d6eb0, #435290);
+}
+
+.hitachi-card__btn:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 0.2vw rgba(255, 255, 255, 0.95),
+    0 0 0 0.35vw rgba(95, 108, 163, 0.28);
+}
+
+@media (max-width: 1200px) {
+  .hitachi-page__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .hitachi-page__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .hitachi-page__grid {
+    grid-template-columns: 1fr;
+  }
+}

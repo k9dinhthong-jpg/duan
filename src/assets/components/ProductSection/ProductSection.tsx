@@ -32,9 +32,9 @@ function ProductSection() {
   useEffect(() => {
     async function fetchProducts() {
       const files = [
-        "data/Product-Hitachi.json",
-        "data/Product-Kobelco.json",
-        "data/Product-Komatsu.json",
+        "data/Main-Product/Product-Hitachi.json",
+        "data/Main-Product/Product-Kobelco.json",
+        "data/Main-Product/Product-Komatsu.json",
       ];
 
       const responses = await Promise.all(
