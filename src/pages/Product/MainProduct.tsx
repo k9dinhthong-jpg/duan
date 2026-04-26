@@ -1,8 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import "./MainProduct.css";
 import { toPublicPath } from "../../utils/publicPath";
+import { useProductsHitachi } from "../../assets/context/ProductsHitachi";
+import { useProductsKobelco } from "../../assets/context/ProductsKobelco";
+import { useProductsKomatsu } from "../../assets/context/ProductsKomatsu";
 
 type ProductItem = {
   id: string;
@@ -36,14 +39,33 @@ type MainProductGroup = {
 type ScrollState = { atStart: boolean; atEnd: boolean };
 
 function MainProduct() {
-  const [groups, setGroups] = useState<MainProductGroup[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
+  const {
+    hitachiGroup,
+    isLoading: isHitachiLoading,
+    error: hitachiError,
+  } = useProductsHitachi();
+  const {
+    kobelcoGroup,
+    isLoading: isKobelcoLoading,
+    error: kobelcoError,
+  } = useProductsKobelco();
+  const {
+    komatsuGroup,
+    isLoading: isKomatsuLoading,
+    error: komatsuError,
+  } = useProductsKomatsu();
   const [sectionOffset, setSectionOffset] = useState(0);
   const gridRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [scrollStates, setScrollStates] = useState<Record<string, ScrollState>>(
     {},
   );
+  const groups = useMemo<MainProductGroup[]>(
+    () => [hitachiGroup, kobelcoGroup, komatsuGroup],
+    [hitachiGroup, kobelcoGroup, komatsuGroup],
+  );
+
+  const isLoading = isHitachiLoading || isKobelcoLoading || isKomatsuLoading;
+  const loadError = hitachiError || kobelcoError || komatsuError || "";
 
   function updateScrollState(id: string, el: HTMLDivElement) {
     setScrollStates((prev) => ({
@@ -64,43 +86,6 @@ function MainProduct() {
       behavior: "smooth",
     });
   }
-
-  useEffect(() => {
-    async function fetchMainProducts() {
-      try {
-        setIsLoading(true);
-        setLoadError("");
-
-        const files = [
-          "data/Main-Product/Product-Hitachi.json",
-          "data/Main-Product/Product-Kobelco.json",
-          "data/Main-Product/Product-Komatsu.json",
-        ];
-
-        const responses = await Promise.all(
-          files.map((file) => fetch(toPublicPath(file))),
-        );
-
-        if (responses.some((response) => !response.ok)) {
-          throw new Error("load-failed");
-        }
-
-        const data = await Promise.all(
-          responses.map(
-            (response) => response.json() as Promise<MainProductGroup>,
-          ),
-        );
-
-        setGroups(data);
-      } catch {
-        setLoadError("Không thể tải danh sách sản phẩm. Vui lòng thử lại sau.");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchMainProducts();
-  }, []);
 
   useEffect(() => {
     groups.forEach((group) => {
@@ -148,7 +133,7 @@ function MainProduct() {
 
         {!isLoading && loadError && (
           <p className="product-state is-error" role="alert">
-            {loadError}
+            Không thể tải danh sách sản phẩm từ Supabase.
           </p>
         )}
 

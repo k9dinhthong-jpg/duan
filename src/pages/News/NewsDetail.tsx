@@ -1,19 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import "./News.css";
 import { toPublicPath } from "../../utils/publicPath";
 import { applySeo } from "../../utils/seo";
-
-type NewsItem = {
-  id: string;
-  slug?: string;
-  title: string;
-  content: string;
-  image: string;
-  category?: string;
-  publishedAt?: string;
-  author?: string;
-};
+import { useNews } from "../../assets/context/NewsContext";
 
 function slugify(text: string) {
   return text
@@ -36,36 +26,13 @@ function formatDate(value?: string) {
   }).format(parsedDate);
 }
 
+function getImageSrc(image: string) {
+  return /^https?:\/\//i.test(image) ? image : toPublicPath(image);
+}
+
 function NewsDetail() {
   const { slug = "" } = useParams();
-  const [items, setItems] = useState<NewsItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
-
-  useEffect(() => {
-    async function loadNews() {
-      try {
-        setIsLoading(true);
-        setLoadError("");
-
-        const response = await fetch(
-          toPublicPath("data/Featured-New/Featured-New.json"),
-        );
-        if (!response.ok) {
-          throw new Error("load-failed");
-        }
-
-        const data = (await response.json()) as NewsItem[];
-        setItems(data);
-      } catch {
-        setLoadError("Không thể tải nội dung bài viết. Vui lòng thử lại sau.");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    loadNews();
-  }, []);
+  const { items, isLoading, error } = useNews();
 
   const article = useMemo(() => {
     return items
@@ -96,11 +63,11 @@ function NewsDetail() {
     );
   }
 
-  if (loadError) {
+  if (error) {
     return (
       <section className="news-page">
         <p className="news-state is-error" role="alert">
-          {loadError}
+          Không thể tải nội dung bài viết. Vui lòng thử lại sau.
         </p>
       </section>
     );
@@ -125,7 +92,7 @@ function NewsDetail() {
 
       <article className="news-detail-card">
         <img
-          src={toPublicPath(article.image)}
+          src={getImageSrc(article.image)}
           alt={article.title}
           className="news-detail-image"
           loading="lazy"

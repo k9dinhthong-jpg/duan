@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import {
   FaPhoneAlt,
   FaTelegramPlane,
@@ -8,14 +7,7 @@ import {
 import iconZalo from "./img/Zalo.svg.png";
 import "./ButtonContact.css";
 import { toPublicPath } from "../../../utils/publicPath";
-
-type CompanyContactData = {
-  phone?: string;
-  zalo?: string;
-  wechat?: string;
-  telegram?: string;
-  tiktok?: string;
-};
+import { useCompanyInfo } from "../../context/CompanyInfoContext";
 
 function sanitizeTel(phone?: string) {
   return (phone ?? "").replace(/\s+/g, "");
@@ -29,37 +21,7 @@ function normalizeUrl(value?: string) {
 }
 
 function ButtonContact() {
-  const [companyContact, setCompanyContact] = useState<CompanyContactData>({
-    phone: "0966 121 686",
-    zalo: "https://zalo.me/0966121686",
-    wechat: "#",
-    telegram: "https://t.me/sugar88_vn",
-    tiktok: "https://www.tiktok.com/@sugar88_vn",
-  });
-
-  useEffect(() => {
-    async function fetchCompanyContact() {
-      try {
-        const response = await fetch(
-          toPublicPath("data/Company/DataCompany.json"),
-        );
-        if (!response.ok) return;
-
-        const data = (await response.json()) as CompanyContactData;
-        setCompanyContact((prev) => ({
-          phone: data.phone?.trim() || prev.phone,
-          zalo: data.zalo?.trim() || prev.zalo,
-          wechat: data.wechat?.trim() || prev.wechat,
-          telegram: data.telegram?.trim() || prev.telegram,
-          tiktok: data.tiktok?.trim() || prev.tiktok,
-        }));
-      } catch {
-        // Keep fallback values when loading fails.
-      }
-    }
-
-    fetchCompanyContact();
-  }, []);
+  const { companyInfo: companyContact } = useCompanyInfo();
 
   const wechatUrl = normalizeUrl(companyContact.wechat);
 

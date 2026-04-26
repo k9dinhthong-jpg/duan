@@ -3,37 +3,13 @@ import { FaArrowRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import "./IntroCompany.css";
 import { toPublicPath } from "../../../utils/publicPath";
-
-type CompanyData = {
-  name?: string;
-  shortName?: string;
-};
+import { useCompanyInfo } from "../../context/CompanyInfoContext";
 
 function IntroCompany() {
-  const [companyName, setCompanyName] = useState("CÔNG TY THUẬN PHÁT");
+  const { companyInfo } = useCompanyInfo();
+  const companyName = companyInfo.shortName || companyInfo.name;
   const [isCentered, setIsCentered] = useState(false);
   const sectionRef = useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
-    async function fetchCompanyData() {
-      try {
-        const response = await fetch(
-          toPublicPath("data/Company/DataCompany.json"),
-        );
-        if (!response.ok) return;
-
-        const data = (await response.json()) as CompanyData;
-        const nextCompanyName = data.shortName?.trim() || data.name?.trim();
-        if (nextCompanyName) {
-          setCompanyName(nextCompanyName);
-        }
-      } catch {
-        // Keep fallback value when loading fails.
-      }
-    }
-
-    fetchCompanyData();
-  }, []);
 
   useEffect(() => {
     const sectionEl = sectionRef.current;
@@ -97,8 +73,8 @@ function IntroCompany() {
 
         <div className="intro-company-right">
           <img
-            src={toPublicPath("img/IntroCompany/Company.png")}
-            alt="Máy xúc Hyundai"
+            src="https://ehsccjufbaehvfovguvm.supabase.co/storage/v1/object/public/Company/Company.png"
+            alt="Máy công trình Thuận Phát"
           />
         </div>
       </div>

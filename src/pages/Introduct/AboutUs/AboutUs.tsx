@@ -1,16 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import "./AboutUs.css";
 import { toPublicPath } from "../../../utils/publicPath";
-
-type CompanyData = {
-  name?: string;
-  shortName?: string;
-  phone?: string;
-  address?: string;
-  email?: string;
-  website?: string;
-};
+import { useCompanyInfo } from "../../../assets/context/CompanyInfoContext";
 
 function ensureHttp(url?: string) {
   if (!url) return "";
@@ -57,40 +49,7 @@ const trustStats = [
 ];
 
 function AboutUs() {
-  const [companyData, setCompanyData] = useState<CompanyData>({
-    name: "Công Ty Xuất Nhập Khẩu Máy Công Trình Thuận Phát",
-    shortName: "MÁY CÔNG TRÌNH THUẬN PHÁT",
-    phone: "0966 121 686",
-    address: "Số 168 - Khu 4 - Xã Tề Lỗ - Tỉnh Phú Thọ",
-    email: "k9dinhthong@gmail.com",
-    website: "maycongtrinhthuanphat.com",
-  });
-
-  useEffect(() => {
-    async function fetchCompanyData() {
-      try {
-        const response = await fetch(
-          toPublicPath("data/Company/DataCompany.json"),
-        );
-        if (!response.ok) return;
-
-        const data = (await response.json()) as CompanyData;
-        setCompanyData((prev) => ({
-          name: data.name?.trim() || prev.name,
-          shortName:
-            data.shortName?.trim() || data.name?.trim() || prev.shortName,
-          phone: data.phone?.trim() || prev.phone,
-          address: data.address?.trim() || prev.address,
-          email: data.email?.trim() || prev.email,
-          website: data.website?.trim() || prev.website,
-        }));
-      } catch {
-        // Keep fallback values when loading fails.
-      }
-    }
-
-    fetchCompanyData();
-  }, []);
+  const { companyInfo: companyData } = useCompanyInfo();
 
   const websiteUrl = useMemo(
     () => ensureHttp(companyData.website),

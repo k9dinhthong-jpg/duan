@@ -8,24 +8,10 @@ import {
   FaPhoneAlt,
 } from "react-icons/fa";
 import { FaTiktok } from "react-icons/fa6";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import "./Footer.css";
-import { toPublicPath } from "../../../utils/publicPath";
-
-type CompanyData = {
-  name?: string;
-  shortName?: string;
-  taxCode?: string;
-  establishedYear?: string;
-  phone?: string;
-  address?: string;
-  email?: string;
-  website?: string;
-  facebook?: string;
-  tiktok?: string;
-  instagram?: string;
-};
+import { useCompanyInfo } from "../../context/CompanyInfoContext";
 
 function ensureHttp(url?: string) {
   if (!url) return "";
@@ -38,50 +24,7 @@ function sanitizeTel(phone?: string) {
 }
 
 function Footer() {
-  const [companyData, setCompanyData] = useState<CompanyData>({
-    name: "Thuận Phát Máy Công Trình",
-    shortName: "Thuận Phát Máy Công Trình",
-    taxCode: "Đang cập nhật",
-    establishedYear: "2020",
-    phone: "0948 299 444",
-    address: "Số 168 - Khu 4 - Xã Tề Lỗ - Tỉnh Phú Thọ",
-    email: "k9dinhthong@gmail.com",
-    website: "maycongtrinhthuanphat.com",
-    facebook: "#",
-    tiktok: "#",
-    instagram: "#",
-  });
-
-  useEffect(() => {
-    async function fetchCompanyData() {
-      try {
-        const response = await fetch(
-          toPublicPath("data/Company/DataCompany.json"),
-        );
-        if (!response.ok) return;
-        const data = (await response.json()) as CompanyData;
-
-        setCompanyData((prev) => ({
-          name: data.name?.trim() || prev.name,
-          shortName:
-            data.shortName?.trim() || data.name?.trim() || prev.shortName,
-          taxCode: data.taxCode?.trim() || prev.taxCode,
-          establishedYear: data.establishedYear?.trim() || prev.establishedYear,
-          phone: data.phone?.trim() || prev.phone,
-          address: data.address?.trim() || prev.address,
-          email: data.email?.trim() || prev.email,
-          website: data.website?.trim() || prev.website,
-          facebook: data.facebook?.trim() || prev.facebook,
-          tiktok: data.tiktok?.trim() || prev.tiktok,
-          instagram: data.instagram?.trim() || prev.instagram,
-        }));
-      } catch {
-        // Keep fallback values when loading fails.
-      }
-    }
-
-    fetchCompanyData();
-  }, []);
+  const { companyInfo: companyData } = useCompanyInfo();
 
   const websiteUrl = useMemo(
     () => ensureHttp(companyData.website),

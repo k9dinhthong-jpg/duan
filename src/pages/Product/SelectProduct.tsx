@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import "./SelectProduct.css";
 import { toPublicPath } from "../../utils/publicPath";
+import { useProductsHitachi } from "../../assets/context/ProductsHitachi";
+import { useProductsKobelco } from "../../assets/context/ProductsKobelco";
+import { useProductsKomatsu } from "../../assets/context/ProductsKomatsu";
 
 type ProductItem = {
   id: string;
@@ -34,6 +37,21 @@ type ProductGroup = {
 
 function SelectProduct() {
   const { brand = "hitachi" } = useParams<{ brand: string }>();
+  const {
+    hitachiGroup,
+    isLoading: isHitachiLoading,
+    error: hitachiError,
+  } = useProductsHitachi();
+  const {
+    kobelcoGroup,
+    isLoading: isKobelcoLoading,
+    error: kobelcoError,
+  } = useProductsKobelco();
+  const {
+    komatsuGroup,
+    isLoading: isKomatsuLoading,
+    error: komatsuError,
+  } = useProductsKomatsu();
   const [searchParams] = useSearchParams();
   const [group, setGroup] = useState<ProductGroup | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -50,33 +68,44 @@ function SelectProduct() {
   }, [searchParams]);
 
   useEffect(() => {
-    async function fetchProductsByBrand() {
-      try {
-        setIsLoading(true);
-        setLoadError("");
+    const normalizedBrand = brand.toLowerCase();
 
-        const capitalizedBrand =
-          brand.charAt(0).toUpperCase() + brand.slice(1).toLowerCase();
-        const response = await fetch(
-          toPublicPath(`data/Main-Product/Product-${capitalizedBrand}.json`),
-        );
-
-        if (!response.ok) {
-          throw new Error("load-failed");
-        }
-
-        const data = (await response.json()) as ProductGroup;
-        setGroup(data);
-      } catch {
-        setLoadError("Không thể tải dữ liệu sản phẩm theo thương hiệu này.");
-        setGroup(null);
-      } finally {
-        setIsLoading(false);
-      }
+    if (normalizedBrand === "hitachi") {
+      setGroup(hitachiGroup);
+      setLoadError(hitachiError ?? "");
+      setIsLoading(isHitachiLoading);
+      return;
     }
 
-    fetchProductsByBrand();
-  }, [brand]);
+    if (normalizedBrand === "kobelco") {
+      setGroup(kobelcoGroup);
+      setLoadError(kobelcoError ?? "");
+      setIsLoading(isKobelcoLoading);
+      return;
+    }
+
+    if (normalizedBrand === "komatsu") {
+      setGroup(komatsuGroup);
+      setLoadError(komatsuError ?? "");
+      setIsLoading(isKomatsuLoading);
+      return;
+    }
+
+    setGroup(null);
+    setIsLoading(false);
+    setLoadError("Không thể tải dữ liệu sản phẩm theo thương hiệu này.");
+  }, [
+    brand,
+    hitachiGroup,
+    hitachiError,
+    isHitachiLoading,
+    kobelcoGroup,
+    kobelcoError,
+    isKobelcoLoading,
+    komatsuGroup,
+    komatsuError,
+    isKomatsuLoading,
+  ]);
 
   useEffect(() => {
     function updateSectionOffset() {

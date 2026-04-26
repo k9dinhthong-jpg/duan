@@ -3,14 +3,7 @@ import { FaChevronRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import "./FeaturedNews.css";
 import { toPublicPath } from "../../../utils/publicPath";
-
-type FeaturedNewsItem = {
-  id: string;
-  slug?: string;
-  title: string;
-  content: string;
-  image: string;
-};
+import { useNews } from "../../context/NewsContext";
 
 function getIdOrder(id: string): number {
   const match = id.match(/(\d+)$/);
@@ -26,25 +19,13 @@ function slugify(text: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+function getImageSrc(image: string) {
+  return /^https?:\/\//i.test(image) ? image : toPublicPath(image);
+}
+
 function FeaturedNews() {
-  const [items, setItems] = useState<FeaturedNewsItem[]>([]);
+  const { items, isLoading, error } = useNews();
   const [itemsToShow, setItemsToShow] = useState(3);
-
-  useEffect(() => {
-    const loadFeaturedNews = async () => {
-      try {
-        const response = await fetch(
-          toPublicPath("data/Featured-New/Featured-New.json"),
-        );
-        const data: FeaturedNewsItem[] = await response.json();
-        setItems(data);
-      } catch (error) {
-        console.error("Failed to load featured news:", error);
-      }
-    };
-
-    loadFeaturedNews();
-  }, []);
 
   useEffect(() => {
     const getItemsToShow = (width: number): number => {
@@ -76,11 +57,19 @@ function FeaturedNews() {
   return (
     <section className="featured-news">
       <h2 className="featured-news-title">Tin Tức Nổi Bật</h2>
+      {isLoading && (
+        <p className="featured-news-item-desc">Đang tải tin tức...</p>
+      )}
+      {!isLoading && error && (
+        <p className="featured-news-item-desc">
+          Không thể tải tin tức từ Supabase.
+        </p>
+      )}
       <ul className="featured-news-grid">
         {latestItems.map((item) => (
           <li key={item.id} className="featured-news-card">
             <img
-              src={toPublicPath(item.image)}
+              src={getImageSrc(item.image)}
               alt={item.title}
               className="featured-news-image"
               loading="lazy"

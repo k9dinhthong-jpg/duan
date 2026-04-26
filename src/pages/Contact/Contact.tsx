@@ -8,23 +8,7 @@ import {
   FaWeixin,
 } from "react-icons/fa";
 import "./Contact.css";
-import { toPublicPath } from "../../utils/publicPath";
-
-type CompanyData = {
-  name?: string;
-  shortName?: string;
-  phone?: string;
-  address?: string;
-  mapAddress?: string;
-  email?: string;
-  website?: string;
-  facebook?: string;
-  zalo?: string;
-  wechat?: string;
-  telegram?: string;
-  tiktok?: string;
-  instagram?: string;
-};
+import { useCompanyInfo } from "../../assets/context/CompanyInfoContext";
 
 type ContactFormValues = {
   fullName: string;
@@ -105,22 +89,7 @@ function validateForm(values: ContactFormValues): ContactFormErrors {
 
 function Contact() {
   const [searchParams] = useSearchParams();
-  const [companyData, setCompanyData] = useState<CompanyData>({
-    name: "Công Ty Xuất Nhập Khẩu Máy Công Trình Thuận Phát",
-    shortName: "Máy Công Trình Thuận Phát",
-    phone: "0948 299 444",
-    address: "Số 168 - Khu 4 - Xã Tề Lỗ - Tỉnh Phú Thọ",
-    mapAddress:
-      "https://www.google.com/maps?q=X%C3%A3%20T%E1%BB%81%20L%E1%BB%97%2C%20Ph%C3%BA%20Th%E1%BB%8D%2C%20Vi%E1%BB%87t%20Nam&output=embed",
-    email: "k9dinhthong@gmail.com",
-    website: "maycongtrinhthuanphat.com",
-    facebook: "#",
-    zalo: "#",
-    wechat: "#",
-    telegram: "#",
-    tiktok: "#",
-    instagram: "#",
-  });
+  const { companyInfo: companyData } = useCompanyInfo();
   const [formValues, setFormValues] = useState<ContactFormValues>({
     fullName: "",
     email: "",
@@ -145,39 +114,6 @@ function Contact() {
       message: `Tôi cần tư vấn sản phẩm: ${requestedProduct}`,
     }));
   }, [searchParams]);
-
-  useEffect(() => {
-    async function fetchCompanyData() {
-      try {
-        const response = await fetch(
-          toPublicPath("data/Company/DataCompany.json"),
-        );
-        if (!response.ok) return;
-
-        const data = (await response.json()) as CompanyData;
-        setCompanyData((prev) => ({
-          name: data.name?.trim() || prev.name,
-          shortName:
-            data.shortName?.trim() || data.name?.trim() || prev.shortName,
-          phone: data.phone?.trim() || prev.phone,
-          address: data.address?.trim() || prev.address,
-          mapAddress: data.mapAddress?.trim() || prev.mapAddress,
-          email: data.email?.trim() || prev.email,
-          website: data.website?.trim() || prev.website,
-          facebook: data.facebook?.trim() || prev.facebook,
-          zalo: data.zalo?.trim() || prev.zalo,
-          wechat: data.wechat?.trim() || prev.wechat,
-          telegram: data.telegram?.trim() || prev.telegram,
-          tiktok: data.tiktok?.trim() || prev.tiktok,
-          instagram: data.instagram?.trim() || prev.instagram,
-        }));
-      } catch {
-        // Keep fallback values when loading fails.
-      }
-    }
-
-    fetchCompanyData();
-  }, []);
 
   const websiteUrl = useMemo(
     () => ensureHttp(companyData.website),

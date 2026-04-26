@@ -1,18 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import "./News.css";
 import { toPublicPath } from "../../utils/publicPath";
-
-interface NewsItem {
-  id: string;
-  slug?: string;
-  title: string;
-  content: string;
-  image: string;
-  category?: string;
-  publishedAt?: string;
-  author?: string;
-}
+import { useNews } from "../../assets/context/NewsContext";
 
 function slugify(text: string) {
   return text
@@ -35,35 +25,12 @@ function formatDate(value?: string) {
   }).format(parsedDate);
 }
 
+function getImageSrc(image: string) {
+  return /^https?:\/\//i.test(image) ? image : toPublicPath(image);
+}
+
 function News() {
-  const [items, setItems] = useState<NewsItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
-
-  useEffect(() => {
-    async function loadNews() {
-      try {
-        setIsLoading(true);
-        setLoadError("");
-
-        const response = await fetch(
-          toPublicPath("data/Featured-New/Featured-New.json"),
-        );
-        if (!response.ok) {
-          throw new Error("load-failed");
-        }
-
-        const data = (await response.json()) as NewsItem[];
-        setItems(data);
-      } catch {
-        setLoadError("Không thể tải danh sách tin tức. Vui lòng thử lại sau.");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    loadNews();
-  }, []);
+  const { items, isLoading, error } = useNews();
 
   const newsItems = useMemo(
     () =>
@@ -84,13 +51,13 @@ function News() {
         </p>
       )}
 
-      {!isLoading && loadError && (
+      {!isLoading && error && (
         <p className="news-state is-error" role="alert">
-          {loadError}
+          Không thể tải danh sách tin tức. Vui lòng thử lại sau.
         </p>
       )}
 
-      {!isLoading && !loadError && newsItems.length === 0 && (
+      {!isLoading && !error && newsItems.length === 0 && (
         <p className="news-state">Chưa có bài viết nào để hiển thị.</p>
       )}
 
@@ -98,7 +65,7 @@ function News() {
         {newsItems.map((news) => (
           <article key={news.id} className="news-item">
             <img
-              src={toPublicPath(news.image)}
+              src={getImageSrc(news.image)}
               alt={news.title}
               className="news-image"
               loading="lazy"

@@ -1,8 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FaArrowRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import "./ProductSection.css";
 import { toPublicPath } from "../../../utils/publicPath";
+import { useProductsHitachi } from "../../context/ProductsHitachi";
+import { useProductsKobelco } from "../../context/ProductsKobelco";
+import { useProductsKomatsu } from "../../context/ProductsKomatsu";
 
 type ProductItem = {
   id: string;
@@ -39,35 +42,20 @@ function getGroupBrandSlug(group: ProductGroup) {
 }
 
 function ProductSection() {
-  const [productGroups, setProductGroups] = useState<ProductGroup[]>([]);
+  const { hitachiGroup } = useProductsHitachi();
+  const { kobelcoGroup } = useProductsKobelco();
+  const { komatsuGroup } = useProductsKomatsu();
   const [itemsToShow, setItemsToShow] = useState(4);
+  const productGroups = useMemo<ProductGroup[]>(
+    () => [hitachiGroup, kobelcoGroup, komatsuGroup],
+    [hitachiGroup, kobelcoGroup, komatsuGroup],
+  );
 
   const getItemsToShow = (width: number): number => {
     if (width > 1200) return 4;
     if (width >= 768) return 3;
     return 2;
   };
-
-  useEffect(() => {
-    async function fetchProducts() {
-      const files = [
-        "data/Main-Product/Product-Hitachi.json",
-        "data/Main-Product/Product-Kobelco.json",
-        "data/Main-Product/Product-Komatsu.json",
-      ];
-
-      const responses = await Promise.all(
-        files.map((file) => fetch(toPublicPath(file))),
-      );
-      const data = await Promise.all(
-        responses.map((response) => response.json() as Promise<ProductGroup>),
-      );
-
-      setProductGroups(data);
-    }
-
-    fetchProducts();
-  }, []);
 
   useEffect(() => {
     function handleResize() {
@@ -90,10 +78,17 @@ function ProductSection() {
           .filter(
             (product) => product.badge === "Hot" && product.status !== "Đã bán",
           )
-          .sort((a, b) => b.id.localeCompare(a.id))
-          .slice(0, itemsToShow);
+          .sort((a, b) => b.id.localeCompare(a.id));
 
-        if (visibleProducts.length === 0) {
+        const visibleWithFallback =
+          visibleProducts.length > 0
+            ? visibleProducts.slice(0, itemsToShow)
+            : group.products
+                .filter((product) => product.status !== "Đã bán")
+                .sort((a, b) => b.id.localeCompare(a.id))
+                .slice(0, itemsToShow);
+
+        if (visibleWithFallback.length === 0) {
           return null;
         }
 
@@ -104,7 +99,7 @@ function ProductSection() {
               <p className="product-group-subtitle">SẢN PHẨM NỔI BẬT</p>
             </header>
             <div className="product-grid">
-              {visibleProducts.map((product) => (
+              {visibleWithFallback.map((product) => (
                 <div className="product-card" key={product.id}>
                   <div className="product-card-image-wrap">
                     {product.badge === "Hot" && (
