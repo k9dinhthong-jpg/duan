@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { FaArrowRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import "./IntroCompany.css";
-import { toPublicPath } from "../../../utils/publicPath";
 import { useCompanyInfo } from "../../context/CompanyInfoContext";
 
 function IntroCompany() {
