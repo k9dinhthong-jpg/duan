@@ -11,7 +11,7 @@ import { FaTiktok } from "react-icons/fa6";
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import "./Footer.css";
-import { useCompanyInfo } from "../../context/CompanyInfoContext";
+import { useCompanyInfo } from "../../../context/CompanyInfoContext";
 
 function ensureHttp(url?: string) {
   if (!url) return "";
@@ -25,6 +25,12 @@ function sanitizeTel(phone?: string) {
 
 function Footer() {
   const { companyInfo: companyData } = useCompanyInfo();
+  const companyDisplayName = companyData.name.trim();
+  const aboutText = companyData.about?.trim() ?? "";
+  const officeAddress = companyData.address.trim();
+  const phoneNumber = companyData.phone.trim();
+  const emailAddress = companyData.email.trim();
+  const taxCode = companyData.taxCode.trim();
 
   const websiteUrl = useMemo(
     () => ensureHttp(companyData.website),
@@ -37,41 +43,68 @@ function Footer() {
     : foundedYear < currentYear
       ? `${foundedYear} - ${currentYear}`
       : `${foundedYear}`;
+  const socialItems = [
+    {
+      key: "facebook",
+      label: "Facebook",
+      href: companyData.facebook,
+      icon: <FaFacebookF />,
+    },
+    {
+      key: "instagram",
+      label: "Instagram",
+      href: companyData.instagram,
+      icon: <FaInstagram />,
+    },
+    {
+      key: "tiktok",
+      label: "TikTok",
+      href: companyData.tiktok,
+      icon: <FaTiktok />,
+    },
+  ].filter((item) => item.href.trim());
 
   return (
     <div className="site-footer">
       <section className="footer-top">
         <div className="footer-col footer-company">
-          <h3 className="footer-heading">{companyData.shortName}</h3>
-          <p className="footer-text">
-            Công ty TNHH sản xuất kinh doanh xuất nhập khẩu <br /> máy công
-            trình Thuận Phát.
-          </p>
+          {companyDisplayName ? (
+            <h3 className="footer-heading">{companyDisplayName}</h3>
+          ) : null}
+          {aboutText ? <p className="footer-text">{aboutText}</p> : null}
           <ul className="footer-contact-list">
-            <li>
-              <FaMapMarkerAlt />
-              <span>{companyData.address}</span>
-            </li>
-            <li>
-              <FaPhoneAlt />
-              <a href={`tel:${sanitizeTel(companyData.phone)}`}>
-                {companyData.phone}
-              </a>
-            </li>
-            <li>
-              <FaEnvelope />
-              <a href={`mailto:${companyData.email}`}>{companyData.email}</a>
-            </li>
-            <li>
-              <FaGlobe />
-              <a href={websiteUrl} target="_blank" rel="noreferrer">
-                {companyData.website}
-              </a>
-            </li>
-            <li>
-              <FaAngleRight />
-              <span>MST: {companyData.taxCode}</span>
-            </li>
+            {officeAddress ? (
+              <li>
+                <FaMapMarkerAlt />
+                <span>{officeAddress}</span>
+              </li>
+            ) : null}
+            {phoneNumber ? (
+              <li>
+                <FaPhoneAlt />
+                <a href={`tel:${sanitizeTel(phoneNumber)}`}>{phoneNumber}</a>
+              </li>
+            ) : null}
+            {emailAddress ? (
+              <li>
+                <FaEnvelope />
+                <a href={`mailto:${emailAddress}`}>{emailAddress}</a>
+              </li>
+            ) : null}
+            {websiteUrl ? (
+              <li>
+                <FaGlobe />
+                <a href={websiteUrl} target="_blank" rel="noreferrer">
+                  {companyData.website}
+                </a>
+              </li>
+            ) : null}
+            {taxCode ? (
+              <li>
+                <FaAngleRight />
+                <span>MST: {taxCode}</span>
+              </li>
+            ) : null}
           </ul>
         </div>
 
@@ -132,25 +165,19 @@ function Footer() {
           <p className="footer-text">
             Theo dõi để cập nhật sản phẩm và ưu đãi mới.
           </p>
-          <nav aria-label="Mang xa hoi">
-            <ul className="footer-social-list">
-              <li>
-                <a href={companyData.facebook} aria-label="Facebook">
-                  <FaFacebookF />
-                </a>
-              </li>
-              <li>
-                <a href={companyData.instagram} aria-label="Instagram">
-                  <FaInstagram />
-                </a>
-              </li>
-              <li>
-                <a href={companyData.tiktok} aria-label="TikTok">
-                  <FaTiktok />
-                </a>
-              </li>
-            </ul>
-          </nav>
+          {socialItems.length > 0 ? (
+            <nav aria-label="Mang xa hoi">
+              <ul className="footer-social-list">
+                {socialItems.map((item) => (
+                  <li key={item.key}>
+                    <a href={item.href} aria-label={item.label}>
+                      {item.icon}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ) : null}
         </div>
       </section>
 

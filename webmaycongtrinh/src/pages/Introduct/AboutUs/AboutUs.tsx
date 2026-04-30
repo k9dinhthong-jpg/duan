@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import "./AboutUs.css";
 import { toPublicPath } from "../../../utils/publicPath";
-import { useCompanyInfo } from "../../../assets/context/CompanyInfoContext";
+import { useCompanyInfo } from "../../../context/CompanyInfoContext";
 
 function ensureHttp(url?: string) {
   if (!url) return "";
@@ -50,6 +50,10 @@ const trustStats = [
 
 function AboutUs() {
   const { companyInfo: companyData } = useCompanyInfo();
+  const companyDisplayName = companyData.shortName || companyData.name;
+  const officeAddress = companyData.address.trim();
+  const phoneNumber = companyData.phone.trim();
+  const emailAddress = companyData.email.trim();
 
   const websiteUrl = useMemo(
     () => ensureHttp(companyData.website),
@@ -60,7 +64,9 @@ function AboutUs() {
     <div className="aboutus-page">
       <section className="aboutus-banner">
         <div className="aboutus-banner-content">
-          <h1>Về {companyData.shortName}</h1>
+          <h1>
+            {companyDisplayName ? `Về ${companyDisplayName}` : "Về chúng tôi"}
+          </h1>
           <p>
             Đơn vị cung cấp máy công trình uy tín với dịch vụ hậu mãi chuyên sâu
           </p>
@@ -82,16 +88,17 @@ function AboutUs() {
             <div className="aboutus-intro-left">
               <img
                 src={toPublicPath("img/IntroCompany/Company.png")}
-                alt="Công ty Thuận Phát"
+                alt="Công ty Máy Công Trình Nhập Khẩu"
                 className="aboutus-intro-image"
               />
             </div>
             <div className="aboutus-intro-right">
               <p className="aboutus-intro-text">
-                <strong>{companyData.name}</strong> chuyên cung cấp các dòng máy
-                công trình chất lượng cao, đáp ứng nhu cầu thi công và khai thác
-                tại nhiều lĩnh vực. Chúng tôi cam kết mang đến giải pháp phù hợp
-                với chi phí tối ưu cho từng khách hàng.
+                {companyData.name ? <strong>{companyData.name}</strong> : null}{" "}
+                chuyên cung cấp các dòng máy công trình chất lượng cao, đáp ứng
+                nhu cầu thi công và khai thác tại nhiều lĩnh vực. Chúng tôi cam
+                kết mang đến giải pháp phù hợp với chi phí tối ưu cho từng khách
+                hàng.
               </p>
               <p className="aboutus-intro-text">
                 Với đội ngũ giàu kinh nghiệm, hệ thống hậu mãi đồng bộ và quy
@@ -199,32 +206,38 @@ function AboutUs() {
         <div className="aboutus-container">
           <h2 className="aboutus-section-title">Liên Hệ Với Chúng Tôi</h2>
           <div className="aboutus-contact-info">
-            <div className="aboutus-contact-item">
-              <h4>📍 Địa Chỉ</h4>
-              <p>{companyData.address}</p>
-            </div>
-            <div className="aboutus-contact-item">
-              <h4>📞 Điện Thoại</h4>
-              <p>
-                <a href={`tel:${sanitizeTel(companyData.phone)}`}>
-                  {companyData.phone}
-                </a>
-              </p>
-            </div>
-            <div className="aboutus-contact-item">
-              <h4>✉️ Email</h4>
-              <p>
-                <a href={`mailto:${companyData.email}`}>{companyData.email}</a>
-              </p>
-            </div>
-            <div className="aboutus-contact-item">
-              <h4>🌐 Website</h4>
-              <p>
-                <a href={websiteUrl} target="_blank" rel="noreferrer">
-                  {companyData.website}
-                </a>
-              </p>
-            </div>
+            {officeAddress ? (
+              <div className="aboutus-contact-item">
+                <h4>📍 Địa Chỉ</h4>
+                <p>{officeAddress}</p>
+              </div>
+            ) : null}
+            {phoneNumber ? (
+              <div className="aboutus-contact-item">
+                <h4>📞 Điện Thoại</h4>
+                <p>
+                  <a href={`tel:${sanitizeTel(phoneNumber)}`}>{phoneNumber}</a>
+                </p>
+              </div>
+            ) : null}
+            {emailAddress ? (
+              <div className="aboutus-contact-item">
+                <h4>✉️ Email</h4>
+                <p>
+                  <a href={`mailto:${emailAddress}`}>{emailAddress}</a>
+                </p>
+              </div>
+            ) : null}
+            {websiteUrl ? (
+              <div className="aboutus-contact-item">
+                <h4>🌐 Website</h4>
+                <p>
+                  <a href={websiteUrl} target="_blank" rel="noreferrer">
+                    {companyData.website}
+                  </a>
+                </p>
+              </div>
+            ) : null}
           </div>
 
           <div className="aboutus-contact-cta">

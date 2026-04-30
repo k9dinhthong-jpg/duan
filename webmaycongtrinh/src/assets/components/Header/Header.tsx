@@ -1,12 +1,20 @@
-import { useEffect, useState } from "react";
+import {
+  type MouseEvent,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { FaBars, FaCaretDown, FaSearch, FaTimes } from "react-icons/fa";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import "./Header.css";
 import { toPublicPath } from "../../../utils/publicPath";
-import { useCompanyInfo } from "../../context/CompanyInfoContext";
+import { useCompanyInfo } from "../../../context/CompanyInfoContext";
+import { useMenuBrand } from "../../../context/MenuBrandContext";
+import { useMenuItems } from "../../../context/MenuItemsContext";
 
 const text = {
-  kicker: "CÔNG TY XUẤT NHẬP KHẨU",
+  kicker: "MÁY CÔNG TRÌNH NHẬP KHẨU",
   hotlineLabel: "TƯ VẤN NHANH 24/7",
   mainNavAria: "Điều hướng chính",
   closeMenu: "Đóng menu",
@@ -18,23 +26,14 @@ const text = {
   intro: "GIỚI THIỆU",
   news: "TIN TỨC",
   contact: "LIÊN HỆ",
+  login: "ĐĂNG NHẬP",
   searchPlaceholder: "Tìm kiếm...",
   searchAria: "Tìm kiếm",
-  productItems: [
-    { id: 1, name: "MÁY CÔNG TRÌNH HITACHI", link: "/product/hitachi" },
-    { id: 2, name: "MÁY CÔNG TRÌNH KOBELCO", link: "/product/kobelco" },
-    { id: 3, name: "MÁY CÔNG TRÌNH KOMATSU", link: "/product/komatsu" },
-  ],
-  serviceItems: [
-    { id: 1, name: "KIỂM TRA BẢO HÀNH", link: "/services/warranty" },
-    { id: 2, name: "DỊCH VỤ SỬA CHỮA", link: "/services/repair" },
-    { id: 3, name: "THUÊ MÁY CÔNG TRÌNH", link: "/services/rent" },
-  ],
-  introItems: [{ id: 1, name: "VỀ CHÚNG TÔI", link: "/about-us" }],
 };
 
 function Header() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
 
   const isHomeActive = pathname === "/" || pathname === "/home";
   const isProductActive =
@@ -43,53 +42,90 @@ function Header() {
   const isIntroActive = pathname.startsWith("/about-us");
   const isNewsActive = pathname === "/news" || pathname.startsWith("/news/");
   const isContactActive = pathname.startsWith("/contact");
+  const isLoginActive = pathname.startsWith("/login");
   const { companyInfo: companyData } = useCompanyInfo();
+  const phoneNumber = companyData.phone.trim();
+  const { productItems } = useMenuBrand();
+  const { serviceItems, introItems } = useMenuItems();
 
-  const [bannerHeight, setBannerHeight] = useState(0);
-  const [navGap, setNavGap] = useState(0);
   const [navTop, setNavTop] = useState(0);
+  const bannerRef = useRef<HTMLElement | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isCompactNav, setIsCompactNav] = useState(
+    typeof window !== "undefined" ? window.innerWidth <= 1024 : false,
+  );
+  const [openSubmenus, setOpenSubmenus] = useState({
+    product: false,
+    services: false,
+    intro: false,
+  });
+
+  useLayoutEffect(() => {
+    const banner = document.querySelector<HTMLElement>(".header-banner");
+    bannerRef.current = banner;
+    if (!banner) return;
+
+    const updateTop = () => {
+      const nextTop = Math.max(banner.offsetHeight - window.scrollY, 0);
+      setNavTop((prevTop) => (prevTop === nextTop ? prevTop : nextTop));
+    };
+
+    const ro = new ResizeObserver(() => {
+      updateTop();
+    });
+    ro.observe(banner);
+
+    requestAnimationFrame(updateTop);
+
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
-    function updateMeasurements() {
-      const banner = document.querySelector<HTMLElement>(".header-banner");
-      setBannerHeight(banner?.offsetHeight ?? 0);
+    let rafId: number | null = null;
 
-      const gapRaw = getComputedStyle(document.documentElement)
-        .getPropertyValue("--site-nav-gap")
-        .trim();
-      const gapValue = Number.parseFloat(gapRaw);
-      setNavGap(Number.isNaN(gapValue) ? 0 : gapValue);
+    function updateNavTop() {
+      const banner = bannerRef.current;
+      if (!banner) {
+        setNavTop(0);
+        rafId = null;
+        return;
+      }
+
+      const nextTop = Math.max(banner.offsetHeight - window.scrollY, 0);
+      setNavTop((prevTop) => (prevTop === nextTop ? prevTop : nextTop));
+      rafId = null;
     }
 
-    updateMeasurements();
-    window.addEventListener("resize", updateMeasurements);
+    function scheduleUpdate() {
+      if (rafId !== null) {
+        return;
+      }
+
+      rafId = window.requestAnimationFrame(updateNavTop);
+    }
+
+    scheduleUpdate();
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
 
     return () => {
-      window.removeEventListener("resize", updateMeasurements);
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+      }
     };
   }, []);
 
   useEffect(() => {
-    function handleScroll() {
-      const nextTop = Math.max(bannerHeight + navGap - window.scrollY, 0);
-      setNavTop(nextTop);
-    }
-
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    window.addEventListener("resize", handleScroll);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", handleScroll);
-    };
-  }, [bannerHeight, navGap]);
-
-  useEffect(() => {
     function handleResize() {
+      const compact = window.innerWidth <= 1024;
+      setIsCompactNav(compact);
+
       if (window.innerWidth > 1024) {
         setIsMenuOpen(false);
+        setOpenSubmenus({ product: false, services: false, intro: false });
       }
     }
 
@@ -98,6 +134,47 @@ function Header() {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  function toggleSubmenu(key: "product" | "services" | "intro") {
+    setOpenSubmenus((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  }
+
+  function handleMenuToggle() {
+    setIsMenuOpen((prev) => {
+      const next = !prev;
+
+      if (next && isCompactNav) {
+        setOpenSubmenus({
+          product: isProductActive,
+          services: isServiceActive,
+          intro: isIntroActive,
+        });
+      }
+
+      if (!next) {
+        setOpenSubmenus({ product: false, services: false, intro: false });
+      }
+
+      return next;
+    });
+  }
+
+  function closeMenuPanel() {
+    setIsMenuOpen(false);
+  }
+
+  function handleMobileLogoClick(event: MouseEvent<HTMLAnchorElement>) {
+    if (!isCompactNav) {
+      return;
+    }
+
+    event.preventDefault();
+    closeMenuPanel();
+    navigate("/home");
+  }
 
   useEffect(() => {
     function handleEscClose(event: KeyboardEvent) {
@@ -117,19 +194,21 @@ function Header() {
       <div className="header-banner">
         <div className="banner-left">
           <p className="banner-kicker">{text.kicker}</p>
-          <h1 className="banner-title">
-            {companyData.shortName || companyData.shortname || companyData.name}
-          </h1>
+          {companyData.slogan ? (
+            <h1 className="banner-title">{companyData.slogan}</h1>
+          ) : null}
         </div>
-        <div className="banner-right">
-          <p className="banner-hotline-label">{text.hotlineLabel}</p>
-          <a
-            className="banner-hotline-value"
-            href={`tel:${(companyData.phone ?? "").replace(/\s+/g, "")}`}
-          >
-            {companyData.phone}
-          </a>
-        </div>
+        {phoneNumber ? (
+          <div className="banner-right">
+            <p className="banner-hotline-label">{text.hotlineLabel}</p>
+            <a
+              className="banner-hotline-value"
+              href={`tel:${phoneNumber.replace(/\s+/g, "")}`}
+            >
+              {phoneNumber}
+            </a>
+          </div>
+        ) : null}
       </div>
       <nav
         className="site-nav"
@@ -142,69 +221,143 @@ function Header() {
           aria-label={isMenuOpen ? text.closeMenu : text.openMenu}
           aria-expanded={isMenuOpen}
           aria-controls="site-nav-menu"
-          onClick={() => setIsMenuOpen((prev) => !prev)}
+          onClick={handleMenuToggle}
         >
           {isMenuOpen ? <FaTimes /> : <FaBars />}
         </button>
 
-        <Link className="nav-mobile-logo" to="/home" aria-label={text.homeAria}>
-          <img src={toPublicPath("img/Logo/Logo.png")} alt="Thuận Phát" />
+        <Link
+          className="nav-mobile-logo"
+          to="/home"
+          aria-label={text.homeAria}
+          onClick={handleMobileLogoClick}
+        >
+          <img
+            src={toPublicPath("img/Logo/Logo.png")}
+            alt="Logo Máy Công Trình Nhập Khẩu"
+          />
         </Link>
 
         <ul
           className={`nav-menu ${isMenuOpen ? "is-open" : ""}`}
           id="site-nav-menu"
         >
+          <li className={`nav-login-item ${isLoginActive ? "is-active" : ""}`}>
+            <Link
+              className="nav-login-link"
+              to="/login"
+              onClick={closeMenuPanel}
+            >
+              {text.login}
+            </Link>
+          </li>
           <li className={isHomeActive ? "is-active" : ""}>
-            <Link to="/home" onClick={() => setIsMenuOpen(false)}>
+            <Link to="/home" onClick={closeMenuPanel}>
               {text.home}
             </Link>
           </li>
-          <li className={`product-menu ${isProductActive ? "is-active" : ""}`}>
-            <Link to="/product" onClick={() => setIsMenuOpen(false)}>
-              {text.product} <FaCaretDown />
-            </Link>
+          <li
+            className={`product-menu ${isProductActive ? "is-active" : ""} ${
+              openSubmenus.product ? "is-submenu-open" : ""
+            }`}
+          >
+            <div className="product-menu-row">
+              <Link
+                className="product-menu-link"
+                to="/product"
+                onClick={closeMenuPanel}
+              >
+                {text.product} <FaCaretDown />
+              </Link>
+              <button
+                type="button"
+                className="product-menu-toggle"
+                aria-label="Mở danh mục sản phẩm"
+                aria-expanded={openSubmenus.product}
+                onClick={() => toggleSubmenu("product")}
+              >
+                <FaCaretDown aria-hidden="true" />
+              </button>
+            </div>
             <ul className="product-menu-item">
-              {text.productItems.map((item) => (
+              {productItems.map((item) => (
                 <li
                   key={item.id}
                   className={pathname.startsWith(item.link) ? "is-active" : ""}
                 >
-                  <Link to={item.link} onClick={() => setIsMenuOpen(false)}>
+                  <Link to={item.link} onClick={closeMenuPanel}>
                     {item.name}
                   </Link>
                 </li>
               ))}
             </ul>
           </li>
-          <li className={`product-menu ${isServiceActive ? "is-active" : ""}`}>
-            <Link to="/services/warranty" onClick={() => setIsMenuOpen(false)}>
-              {text.services} <FaCaretDown />
-            </Link>
+          <li
+            className={`product-menu ${isServiceActive ? "is-active" : ""} ${
+              openSubmenus.services ? "is-submenu-open" : ""
+            }`}
+          >
+            <div className="product-menu-row">
+              <Link
+                className="product-menu-link"
+                to="/services/warranty"
+                onClick={closeMenuPanel}
+              >
+                {text.services} <FaCaretDown />
+              </Link>
+              <button
+                type="button"
+                className="product-menu-toggle"
+                aria-label="Mở danh mục dịch vụ"
+                aria-expanded={openSubmenus.services}
+                onClick={() => toggleSubmenu("services")}
+              >
+                <FaCaretDown aria-hidden="true" />
+              </button>
+            </div>
             <ul className="product-menu-item">
-              {text.serviceItems.map((item) => (
+              {serviceItems.map((item) => (
                 <li
                   key={item.id}
                   className={pathname.startsWith(item.link) ? "is-active" : ""}
                 >
-                  <Link to={item.link} onClick={() => setIsMenuOpen(false)}>
+                  <Link to={item.link} onClick={closeMenuPanel}>
                     {item.name}
                   </Link>
                 </li>
               ))}
             </ul>
           </li>
-          <li className={`product-menu ${isIntroActive ? "is-active" : ""}`}>
-            <Link to="/about-us" onClick={() => setIsMenuOpen(false)}>
-              {text.intro} <FaCaretDown />
-            </Link>
+          <li
+            className={`product-menu ${isIntroActive ? "is-active" : ""} ${
+              openSubmenus.intro ? "is-submenu-open" : ""
+            }`}
+          >
+            <div className="product-menu-row">
+              <Link
+                className="product-menu-link"
+                to="/about-us"
+                onClick={closeMenuPanel}
+              >
+                {text.intro} <FaCaretDown />
+              </Link>
+              <button
+                type="button"
+                className="product-menu-toggle"
+                aria-label="Mở danh mục giới thiệu"
+                aria-expanded={openSubmenus.intro}
+                onClick={() => toggleSubmenu("intro")}
+              >
+                <FaCaretDown aria-hidden="true" />
+              </button>
+            </div>
             <ul className="product-menu-item">
-              {text.introItems.map((item) => (
+              {introItems.map((item) => (
                 <li
                   key={item.id}
                   className={pathname.startsWith(item.link) ? "is-active" : ""}
                 >
-                  <Link to={item.link} onClick={() => setIsMenuOpen(false)}>
+                  <Link to={item.link} onClick={closeMenuPanel}>
                     {item.name}
                   </Link>
                 </li>
@@ -212,39 +365,49 @@ function Header() {
             </ul>
           </li>
           <li className={isNewsActive ? "is-active" : ""}>
-            <Link to="/news" onClick={() => setIsMenuOpen(false)}>
+            <Link to="/news" onClick={closeMenuPanel}>
               {text.news}
             </Link>
           </li>
           <li className={isContactActive ? "is-active" : ""}>
-            <Link to="/contact" onClick={() => setIsMenuOpen(false)}>
+            <Link to="/contact" onClick={closeMenuPanel}>
               {text.contact}
             </Link>
           </li>
         </ul>
 
-        <div className="nav-search-mobile">
-          <form
-            className="search-box"
-            role="search"
-            onSubmit={(e) => e.preventDefault()}
-          >
-            <input
-              className="find-text"
-              type="search"
-              name="find-text"
-              id="find-text"
-              placeholder={text.searchPlaceholder}
-              aria-label={text.searchAria}
-            />
-            <button
-              className="search-btn"
-              type="submit"
-              aria-label={text.searchAria}
+        <div className="nav-right-actions">
+          <div className="nav-search-mobile">
+            <form
+              className="search-box"
+              role="search"
+              onSubmit={(e) => e.preventDefault()}
             >
-              <FaSearch aria-hidden="true" />
-            </button>
-          </form>
+              <input
+                className="find-text"
+                type="search"
+                name="find-text"
+                id="find-text"
+                placeholder={text.searchPlaceholder}
+                aria-label={text.searchAria}
+              />
+              <button
+                className="search-btn"
+                type="submit"
+                aria-label={text.searchAria}
+              >
+                <FaSearch aria-hidden="true" />
+              </button>
+            </form>
+          </div>
+
+          <Link
+            className="nav-login-desktop"
+            to="/login"
+            onClick={closeMenuPanel}
+          >
+            {text.login}
+          </Link>
         </div>
       </nav>
     </>

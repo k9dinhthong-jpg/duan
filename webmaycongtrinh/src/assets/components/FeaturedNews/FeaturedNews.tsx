@@ -3,24 +3,19 @@ import { FaChevronRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import "./FeaturedNews.css";
 import { toPublicPath } from "../../../utils/publicPath";
-import { useNews } from "../../context/NewsContext";
-
-function getIdOrder(id: string): number {
-  const match = id.match(/(\d+)$/);
-  return match ? Number(match[1]) : -1;
-}
-
-function slugify(text: string) {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
+import { useNews } from "../../../context/NewsContext";
 
 function getImageSrc(image: string) {
   return /^https?:\/\//i.test(image) ? image : toPublicPath(image);
+}
+
+function getNewsImageAlt(title?: string) {
+  const normalizedTitle = title?.trim();
+  if (!normalizedTitle) {
+    return "Hình minh họa tin tức máy công trình nhập khẩu";
+  }
+
+  return `${normalizedTitle} - tin tức máy công trình nhập khẩu`;
 }
 
 function FeaturedNews() {
@@ -49,9 +44,7 @@ function FeaturedNews() {
   }, []);
 
   const latestItems = useMemo(() => {
-    return [...items]
-      .sort((a, b) => getIdOrder(b.id) - getIdOrder(a.id))
-      .slice(0, itemsToShow);
+    return items.slice(0, itemsToShow);
   }, [items, itemsToShow]);
 
   return (
@@ -62,7 +55,7 @@ function FeaturedNews() {
       )}
       {!isLoading && error && (
         <p className="featured-news-item-desc">
-          Không thể tải tin tức từ Supabase.
+          Không thể tải tin tức từ backend.
         </p>
       )}
       <ul className="featured-news-grid">
@@ -70,7 +63,7 @@ function FeaturedNews() {
           <li key={item.id} className="featured-news-card">
             <img
               src={getImageSrc(item.image)}
-              alt={item.title}
+              alt={getNewsImageAlt(item.title)}
               className="featured-news-image"
               loading="lazy"
               decoding="async"
@@ -79,12 +72,14 @@ function FeaturedNews() {
             <div className="featured-news-body">
               <h3 className="featured-news-item-title">{item.title}</h3>
               <p className="featured-news-item-desc">{item.content}</p>
-              <Link
-                to={`/news/${item.slug?.trim() || slugify(item.title)}`}
-                className="featured-news-link"
-              >
-                Xem thêm <FaChevronRight aria-hidden="true" />
-              </Link>
+              {item.slug?.trim() ? (
+                <Link
+                  to={`/news/${item.slug.trim()}`}
+                  className="featured-news-link"
+                >
+                  Xem thêm <FaChevronRight aria-hidden="true" />
+                </Link>
+              ) : null}
             </div>
           </li>
         ))}

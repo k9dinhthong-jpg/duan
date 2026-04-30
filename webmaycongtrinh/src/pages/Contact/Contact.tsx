@@ -8,7 +8,7 @@ import {
   FaWeixin,
 } from "react-icons/fa";
 import "./Contact.css";
-import { useCompanyInfo } from "../../assets/context/CompanyInfoContext";
+import { useCompanyInfo } from "../../context/CompanyInfoContext";
 
 type ContactFormValues = {
   fullName: string;
@@ -104,6 +104,11 @@ function Contact() {
     type: "idle",
     message: "",
   });
+  const companyDisplayName = companyData.shortName || companyData.name;
+  const phoneNumber = companyData.phone.trim();
+  const emailAddress = companyData.email.trim();
+  const officeAddress = companyData.address.trim();
+  const mapAddress = companyData.mapAddress.trim();
 
   useEffect(() => {
     const requestedProduct = searchParams.get("product");
@@ -193,7 +198,7 @@ function Contact() {
       return;
     }
 
-    if (!companyData.email) {
+    if (!emailAddress) {
       setSubmitState({
         type: "error",
         message: "Chưa cấu hình email nhận liên hệ.",
@@ -206,7 +211,7 @@ function Contact() {
       setSubmitState({ type: "idle", message: "" });
 
       const response = await fetch(
-        `https://formsubmit.co/ajax/${encodeURIComponent(companyData.email)}`,
+        `https://formsubmit.co/ajax/${encodeURIComponent(emailAddress)}`,
         {
           method: "POST",
           headers: {
@@ -214,7 +219,9 @@ function Contact() {
             Accept: "application/json",
           },
           body: JSON.stringify({
-            _subject: `Lien he moi tu website - ${companyData.shortName ?? companyData.name ?? "Cong ty"}`,
+            _subject: companyDisplayName
+              ? `Lien he moi tu website - ${companyDisplayName}`
+              : "Lien he moi tu website",
             _template: "table",
             fullName: formValues.fullName,
             email: formValues.email,
@@ -250,42 +257,49 @@ function Contact() {
   return (
     <section className="contact-page">
       <div className="contact-map">
-        <iframe
-          title="Bản đồ công ty"
-          src={companyData.mapAddress}
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          allowFullScreen
-        />
+        {mapAddress ? (
+          <iframe
+            title="Bản đồ công ty"
+            src={mapAddress}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            allowFullScreen
+          />
+        ) : null}
       </div>
       <div className="contact-info">
-        <h2>{companyData.shortName}</h2>
+        {companyDisplayName ? <h2>{companyDisplayName}</h2> : null}
         <ul className="contact-list">
-          <li>
-            <p>Địa chỉ: {companyData.address}</p>
-          </li>
-          <li>
-            <p>
-              Điện thoại:{" "}
-              <a href={`tel:${sanitizeTel(companyData.phone)}`}>
-                {companyData.phone}
-              </a>
-            </p>
-          </li>
-          <li>
-            <p>
-              Email:
-              <a href={`mailto:${companyData.email}`}>{companyData.email}</a>
-            </p>
-          </li>
-          <li>
-            <p>
-              Website:{" "}
-              <a href={websiteUrl} target="_blank" rel="noreferrer">
-                {companyData.website}
-              </a>
-            </p>
-          </li>
+          {officeAddress ? (
+            <li>
+              <p>Địa chỉ: {officeAddress}</p>
+            </li>
+          ) : null}
+          {phoneNumber ? (
+            <li>
+              <p>
+                Điện thoại:{" "}
+                <a href={`tel:${sanitizeTel(phoneNumber)}`}>{phoneNumber}</a>
+              </p>
+            </li>
+          ) : null}
+          {emailAddress ? (
+            <li>
+              <p>
+                Email:<a href={`mailto:${emailAddress}`}>{emailAddress}</a>
+              </p>
+            </li>
+          ) : null}
+          {websiteUrl ? (
+            <li>
+              <p>
+                Website:{" "}
+                <a href={websiteUrl} target="_blank" rel="noreferrer">
+                  {companyData.website}
+                </a>
+              </p>
+            </li>
+          ) : null}
           <li className="contact-meta-item">
             <p>
               Giờ làm việc: <strong>Thứ 2 - Thứ 7, 08:00 - 17:30</strong>

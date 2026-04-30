@@ -8,6 +8,16 @@
   z-index: 999;
 }
 
+.contact-stack {
+  display: flex;
+  flex-direction: column;
+  gap: inherit;
+}
+
+.contact-compact {
+  display: none;
+}
+
 .contact-btn {
   width: clamp(40px, 3vw, 48px);
   height: clamp(40px, 3vw, 48px);
@@ -176,29 +186,68 @@
   .contact-fixed {
     left: 16px;
     bottom: 16px;
-    gap: 10px;
+    gap: 8px;
   }
 
-  .contact-btn {
-    width: 44px;
-    height: 44px;
+  .contact-stack {
+    display: none;
   }
 
-  .contact-btn.zalo img {
-    width: 34px;
-    height: 34px;
+  .contact-compact {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 
-  .contact-btn.wechat,
-  .contact-btn.telegram {
-    font-size: 24px;
+  .contact-menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 0;
+    border-radius: 999px;
+    padding: 10px 14px;
+    background: #e53935;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.24);
+    cursor: pointer;
   }
 
-  .contact-btn.tiktok {
-    font-size: 21px;
+  .contact-compact-list {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
   }
 
-  .contact-btn.phone {
+  .contact-compact-list.is-open {
+    display: flex;
+  }
+
+  .contact-compact-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 132px;
+    border-radius: 999px;
+    padding: 8px 12px;
+    text-decoration: none;
+    color: #1f2e4d;
+    background: #ffffff;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .contact-compact-item img {
+    width: 21px;
+    height: 21px;
+    border-radius: 50%;
+    object-fit: contain;
+  }
+
+  .contact-compact-item svg {
     font-size: 20px;
   }
 }
@@ -207,29 +256,68 @@
   .contact-fixed {
     left: 14px;
     bottom: 14px;
-    gap: 10px;
+    gap: 8px;
   }
 
-  .contact-btn {
-    width: 48px;
-    height: 48px;
+  .contact-stack {
+    display: none;
   }
 
-  .contact-btn.zalo img {
-    width: 36px;
-    height: 36px;
+  .contact-compact {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 
-  .contact-btn.wechat,
-  .contact-btn.telegram {
-    font-size: 25px;
+  .contact-menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 0;
+    border-radius: 999px;
+    padding: 9px 12px;
+    background: #e53935;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.24);
+    cursor: pointer;
   }
 
-  .contact-btn.tiktok {
-    font-size: 22px;
+  .contact-compact-list {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
   }
 
-  .contact-btn.phone {
-    font-size: 21px;
+  .contact-compact-list.is-open {
+    display: flex;
+  }
+
+  .contact-compact-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 122px;
+    border-radius: 999px;
+    padding: 7px 11px;
+    text-decoration: none;
+    color: #1f2e4d;
+    background: #ffffff;
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .contact-compact-item img {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    object-fit: contain;
+  }
+
+  .contact-compact-item svg {
+    font-size: 18px;
   }
 }

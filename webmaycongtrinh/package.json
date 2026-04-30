@@ -12,10 +12,11 @@
     "test:watch": "vitest",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "deploy:vps": "rsync -avz --delete --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r --no-owner --no-group --exclude backend --exclude uploads dist/ root@103.130.213.107:/var/www/maycongtrinhnhapkhau.com.vn/",
+    "deploy:full": "npm run build && rsync -avz --delete --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r --no-owner --no-group --exclude backend --exclude uploads dist/ root@103.130.213.107:/var/www/maycongtrinhnhapkhau.com.vn/ && ssh root@103.130.213.107 \"chown -R www-data:www-data /var/www/maycongtrinhnhapkhau.com.vn && chown -R root:root /var/www/maycongtrinhnhapkhau.com.vn/backend && nginx -t && systemctl reload nginx\""
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.104.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-icons": "^5.6.0",

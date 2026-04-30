@@ -1,5 +1,6 @@
 .product-page {
   width: min(100%, 1200px);
+  margin: calc(var(--site-nav-gap, 0px) + clamp(22px, 2vw, 48px)) auto 0;
   margin-inline: auto;
   padding: clamp(10px, 0.9vw, 16px) clamp(16px, 1.6vw, 28px)
     clamp(24px, 2.5vw, 40px);

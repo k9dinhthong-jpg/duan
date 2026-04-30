@@ -8,22 +8,40 @@ type Slider = {
   alt: string;
 };
 
+const defaultSliderData: Slider[] = [
+  {
+    id: 1,
+    image: "/img/Main-slider/slider-1.png",
+    alt: "Máy xúc Komatsu nhập khẩu đang thi công tại công trường",
+  },
+  {
+    id: 2,
+    image: "/img/Main-slider/slider-2.png",
+    alt: "Máy công trình nhập khẩu Hitachi và Kobelco chất lượng cao",
+  },
+  {
+    id: 3,
+    image: "/img/Main-slider/slider-3.png",
+    alt: "Dịch vụ sửa chữa và bảo hành máy công trình chuyên nghiệp",
+  },
+  {
+    id: 4,
+    image: "/img/Main-slider/slider-4.png",
+    alt: "Danh mục máy xúc, máy đào nhập khẩu sẵn hàng toàn quốc",
+  },
+  {
+    id: 5,
+    image: "/img/Main-slider/slider-5.png",
+    alt: "Máy Công Trình Nhập Khẩu tư vấn nhanh 24/7",
+  },
+];
+
 function MainSlider() {
-  const [dataSlider, setDataSlider] = useState<Slider[]>([]);
+  const dataSlider = defaultSliderData;
   const [currentIndex, setCurrentIndex] = useState(0);
   const [topOffset, setTopOffset] = useState(0);
   const [slideWidth, setSlideWidth] = useState(0);
   const sliderRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    async function getSlider() {
-      const response = await fetch(toPublicPath("data/slider/slider.json"));
-      const data = await response.json();
-      setDataSlider(data);
-    }
-
-    getSlider();
-  }, []);
 
   useEffect(() => {
     if (dataSlider.length === 0) return;

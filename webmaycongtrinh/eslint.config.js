@@ -36,4 +36,10 @@ export default defineConfig([
       },
     },
   },
+  {
+    files: ["src/context/**/*.tsx"],
+    rules: {
+      "react-refresh/only-export-components": "off",
+    },
+  },
 ]);

@@ -5,7 +5,7 @@ type SeoOptions = {
   noIndex?: boolean;
 };
 
-const SITE_NAME = "Thuận Phát - Máy Công Trình";
+const SITE_NAME = "Máy Công Trình Nhập Khẩu";
 
 function ensureMeta(name: string, attribute: "name" | "property") {
   let tag = document.head.querySelector<HTMLMetaElement>(

@@ -3,16 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import "./News.css";
 import { toPublicPath } from "../../utils/publicPath";
 import { applySeo } from "../../utils/seo";
-import { useNews } from "../../assets/context/NewsContext";
-
-function slugify(text: string) {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
+import { useNews } from "../../context/NewsContext";
 
 function formatDate(value?: string) {
   if (!value) return "";
@@ -30,6 +21,15 @@ function getImageSrc(image: string) {
   return /^https?:\/\//i.test(image) ? image : toPublicPath(image);
 }
 
+function getNewsDetailImageAlt(title?: string) {
+  const normalizedTitle = title?.trim();
+  if (!normalizedTitle) {
+    return "Hình ảnh chi tiết tin tức máy công trình";
+  }
+
+  return `${normalizedTitle} - hình ảnh chi tiết`;
+}
+
 function NewsDetail() {
   const { slug = "" } = useParams();
   const { items, isLoading, error } = useNews();
@@ -38,7 +38,7 @@ function NewsDetail() {
     return items
       .map((item) => ({
         ...item,
-        slug: item.slug?.trim() || slugify(item.title),
+        slug: item.slug?.trim(),
       }))
       .find((item) => item.slug === slug);
   }, [items, slug]);
@@ -93,7 +93,7 @@ function NewsDetail() {
       <article className="news-detail-card">
         <img
           src={getImageSrc(article.image)}
-          alt={article.title}
+          alt={getNewsDetailImageAlt(article.title)}
           className="news-detail-image"
           loading="lazy"
         />

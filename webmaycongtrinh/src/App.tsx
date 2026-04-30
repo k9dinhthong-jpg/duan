@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Header from "./assets/components/Header/Header";
 import Footer from "./assets/components/Footer/Footer";
 import ButtonContact from "./assets/components/ButtonContact/ButtonContact";
+import WelcomePopup from "./assets/components/WelcomePopup/WelcomePopup";
 import { applySeo } from "./utils/seo";
 
 const Home = lazy(() => import("./pages/Home/Home"));
@@ -12,70 +13,82 @@ const NewsDetail = lazy(() => import("./pages/News/NewsDetail"));
 const AboutUs = lazy(() => import("./pages/Introduct/AboutUs/AboutUs"));
 const MainProduct = lazy(() => import("./pages/Product/MainProduct"));
 const SelectProduct = lazy(() => import("./pages/Product/SelectProduct"));
-const Warranty = lazy(() => import("./pages/Sevices/Warranty"));
-const Repair = lazy(() => import("./pages/Sevices/Repair"));
-const Rent = lazy(() => import("./pages/Sevices/Rent"));
+const Warranty = lazy(() => import("./pages/Services/Warranty"));
+const Repair = lazy(() => import("./pages/Services/Repair"));
+const Rent = lazy(() => import("./pages/Services/Rent"));
 const PrivacyPolicy = lazy(() => import("./pages/Policy/PrivacyPolicy"));
 const TermsOfUse = lazy(() => import("./pages/Policy/TermsOfUse"));
 const WarrantyPolicy = lazy(() => import("./pages/Policy/WarrantyPolicy"));
 const PaymentPolicy = lazy(() => import("./pages/Policy/PaymentPolicy"));
 const ShippingPolicy = lazy(() => import("./pages/Policy/ShippingPolicy"));
 const NotFound = lazy(() => import("./pages/NotFound/NotFound"));
+const LoginAccount = lazy(
+  () => import("./assets/components/LoginAccount/LoginAccount"),
+);
 
 function getSeoByPath(pathname: string) {
   if (pathname === "/" || pathname === "/home") {
     return {
-      title: "Trang chủ",
+      title: "Máy Công Trình Nhập Khẩu Hitachi, Kobelco, Komatsu",
       description:
-        "Thuận Phát chuyên máy công trình Hitachi, Kobelco, Komatsu cùng dịch vụ bảo hành, sửa chữa, cho thuê.",
+        "Máy Công Trình Nhập Khẩu cung cấp máy xúc, máy đào Hitachi, Kobelco, Komatsu cùng dịch vụ bảo hành, sửa chữa, cho thuê tại Phú Thọ và toàn quốc.",
     };
   }
 
   if (pathname === "/product") {
     return {
-      title: "Sản phẩm",
+      title: "Sản phẩm máy công trình nhập khẩu",
       description:
-        "Danh mục máy công trình nổi bật, cập nhật liên tục theo thương hiệu và tình trạng thực tế.",
+        "Danh mục máy công trình nhập khẩu chính hãng, cập nhật liên tục theo thương hiệu Hitachi, Kobelco, Komatsu và tình trạng thực tế.",
     };
   }
 
   if (pathname.startsWith("/product/")) {
     return {
-      title: "Chi tiết sản phẩm",
+      title: "Chi tiết máy công trình theo thương hiệu",
       description:
-        "Lọc và tra cứu sản phẩm theo thương hiệu, tình trạng và từ khóa nhanh.",
+        "Tra cứu nhanh máy xúc, máy đào theo thương hiệu, tình trạng, mức giá và thông số kỹ thuật phù hợp nhu cầu thi công.",
     };
   }
 
   if (pathname === "/news" || pathname.startsWith("/news/")) {
     return {
-      title: "Tin tức",
+      title: "Tin tức máy công trình",
       description:
-        "Tin tức thị trường máy công trình, mẹo vận hành và cập nhật hoạt động từ Thuận Phát.",
+        "Tin tức thị trường máy công trình, kinh nghiệm vận hành, bảo dưỡng máy xúc và cập nhật sản phẩm mới từ Máy Công Trình Nhập Khẩu.",
     };
   }
 
   if (pathname === "/about-us") {
     return {
-      title: "Giới thiệu",
+      title: "Giới thiệu Máy Công Trình Nhập Khẩu",
       description:
-        "Thông tin doanh nghiệp, năng lực vận hành và cam kết dịch vụ của Thuận Phát.",
+        "Thông tin doanh nghiệp, năng lực vận hành, đội ngũ kỹ thuật và cam kết dịch vụ của Máy Công Trình Nhập Khẩu.",
     };
   }
 
   if (pathname.startsWith("/services/")) {
     return {
-      title: "Dịch vụ",
+      title: "Dịch vụ bảo hành, sửa chữa, cho thuê máy công trình",
       description:
-        "Dịch vụ bảo hành, sửa chữa và cho thuê máy công trình với hỗ trợ kỹ thuật nhanh.",
+        "Dịch vụ bảo hành, sửa chữa và cho thuê máy công trình với hỗ trợ kỹ thuật nhanh, linh kiện phù hợp và quy trình rõ ràng.",
     };
   }
 
   if (pathname === "/contact") {
     return {
-      title: "Liên hệ",
+      title: "Liên hệ tư vấn máy công trình",
       description:
-        "Liên hệ Thuận Phát để được tư vấn nhanh về máy công trình và dịch vụ kỹ thuật.",
+        "Liên hệ Máy Công Trình Nhập Khẩu để được tư vấn nhanh về sản phẩm, báo giá máy xúc, dịch vụ sửa chữa và cho thuê máy công trình.",
+    };
+  }
+
+  if (pathname === "/login") {
+    return {
+      title: "Đăng nhập",
+      description:
+        "Đăng nhập tài khoản để quản lý thông tin, theo dõi yêu cầu tư vấn và đồng bộ dữ liệu làm việc.",
+      noIndex: true,
     };
   }
 
@@ -83,7 +96,7 @@ function getSeoByPath(pathname: string) {
     return {
       title: "Chính sách bảo mật",
       description:
-        "Thông tin về cách Thuận Phát thu thập, lưu trữ và sử dụng dữ liệu khách hàng.",
+        "Thông tin về cách Máy Công Trình Nhập Khẩu thu thập, lưu trữ và sử dụng dữ liệu khách hàng.",
     };
   }
 
@@ -91,7 +104,7 @@ function getSeoByPath(pathname: string) {
     return {
       title: "Điều khoản sử dụng",
       description:
-        "Quy định và điều kiện áp dụng khi sử dụng website Thuận Phát.",
+        "Quy định và điều kiện áp dụng khi sử dụng website Máy Công Trình Nhập Khẩu.",
     };
   }
 
@@ -135,6 +148,7 @@ function App() {
 
   return (
     <section>
+      <WelcomePopup />
       <header>
         <Header /> {/* Header chính */}
       </header>
@@ -145,6 +159,7 @@ function App() {
             <Route path="/home" element={<Home />} /> {/* Trang chủ */}
             <Route path="/contact" element={<Contact />} />{" "}
             {/* Trang liên hệ */}
+            <Route path="/login" element={<LoginAccount />} />
             <Route path="/news" element={<News />} /> {/* Trang tin tức */}
             <Route path="/news/:slug" element={<NewsDetail />} />
             <Route path="/about-us" element={<AboutUs />} />

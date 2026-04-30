@@ -3,9 +3,9 @@ import { FaArrowRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import "./ProductSection.css";
 import { toPublicPath } from "../../../utils/publicPath";
-import { useProductsHitachi } from "../../context/ProductsHitachi";
-import { useProductsKobelco } from "../../context/ProductsKobelco";
-import { useProductsKomatsu } from "../../context/ProductsKomatsu";
+import { useProductsHitachi } from "../../../context/ProductsHitachiContext";
+import { useProductsKobelco } from "../../../context/ProductsKobelcoContext";
+import { useProductsKomatsu } from "../../../context/ProductsKomatsuContext";
 
 type ProductItem = {
   id: string;
@@ -27,6 +27,20 @@ function getProductModel(product: ProductItem) {
 function getProductDisplay(product: ProductItem) {
   const model = getProductModel(product);
   return product.date ? `${model} (${product.date})` : model;
+}
+
+function getProductImageAlt(product: ProductItem, groupTitle?: string) {
+  const normalizedAlt = product.alt?.trim();
+  if (normalizedAlt) {
+    return normalizedAlt;
+  }
+
+  const display = getProductDisplay(product);
+  const normalizedGroup = groupTitle?.trim();
+
+  return normalizedGroup
+    ? `${display} - ${normalizedGroup} nhập khẩu`
+    : `${display} - máy công trình nhập khẩu`;
 }
 
 type ProductGroup = {
@@ -78,17 +92,10 @@ function ProductSection() {
           .filter(
             (product) => product.badge === "Hot" && product.status !== "Đã bán",
           )
-          .sort((a, b) => b.id.localeCompare(a.id));
+          .sort((a, b) => b.id.localeCompare(a.id))
+          .slice(0, itemsToShow);
 
-        const visibleWithFallback =
-          visibleProducts.length > 0
-            ? visibleProducts.slice(0, itemsToShow)
-            : group.products
-                .filter((product) => product.status !== "Đã bán")
-                .sort((a, b) => b.id.localeCompare(a.id))
-                .slice(0, itemsToShow);
-
-        if (visibleWithFallback.length === 0) {
+        if (visibleProducts.length === 0) {
           return null;
         }
 
@@ -99,32 +106,41 @@ function ProductSection() {
               <p className="product-group-subtitle">SẢN PHẨM NỔI BẬT</p>
             </header>
             <div className="product-grid">
-              {visibleWithFallback.map((product) => (
+              {visibleProducts.map((product) => (
                 <div className="product-card" key={product.id}>
                   <div className="product-card-image-wrap">
                     {product.badge === "Hot" && (
                       <span className="product-card-badge">HOT</span>
                     )}
-                    <img src={toPublicPath(product.image)} alt={product.alt} />
+                    <img
+                      src={toPublicPath(product.image)}
+                      alt={getProductImageAlt(product, group.groupTitle)}
+                    />
                   </div>
                   <div className="product-card-content">
                     <h3 className="product-card-title">
                       {getProductDisplay(product)}
                     </h3>
-                    <p className="product-card-meta">
-                      <span className="product-card-meta-label">
-                        Tình trạng:
-                      </span>{" "}
-                      <span
-                        className={`product-card-status ${product.status === "Đã bán" ? "is-sold" : "is-available"}`}
-                      >
-                        {product.status ?? "Còn hàng"}
-                      </span>
-                    </p>
-                    <p className="product-card-meta">
-                      <span className="product-card-meta-label">Liên hệ:</span>{" "}
-                      {product.contact ?? "Liên hệ để biết giá"}
-                    </p>
+                    {product.status ? (
+                      <p className="product-card-meta">
+                        <span className="product-card-meta-label">
+                          Tình trạng:
+                        </span>{" "}
+                        <span
+                          className={`product-card-status ${product.status === "Đã bán" ? "is-sold" : "is-available"}`}
+                        >
+                          {product.status}
+                        </span>
+                      </p>
+                    ) : null}
+                    {product.contact ? (
+                      <p className="product-card-meta">
+                        <span className="product-card-meta-label">
+                          Liên hệ:
+                        </span>{" "}
+                        {product.contact}
+                      </p>
+                    ) : null}
                     <Link
                       className="product-card-btn"
                       to={

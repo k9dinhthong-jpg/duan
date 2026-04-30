@@ -1,12 +1,68 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FaArrowRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import "./IntroCompany.css";
-import { useCompanyInfo } from "../../context/CompanyInfoContext";
+import { toPublicPath } from "../../../utils/publicPath";
+import { useCompanyInfo } from "../../../context/CompanyInfoContext";
+import { useIntroCompany } from "../../../context/IntroCompany";
+
+function getImageSrc(image?: string) {
+  if (!image) return undefined;
+
+  const normalized = image.trim().replace(/\\/g, "/").replace(/^\.\//, "");
+  if (!normalized) return undefined;
+
+  if (/^https?:\/\//i.test(normalized)) return normalized;
+  if (/^data:/i.test(normalized)) return normalized;
+
+  if (/^[a-z0-9.-]+\.[a-z]{2,}(\/|$)/i.test(normalized)) {
+    return `https://${normalized}`;
+  }
+
+  const withoutPublicPrefix = normalized.replace(/^public\//i, "");
+
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+  if (
+    apiBaseUrl &&
+    !withoutPublicPrefix.startsWith("img/") &&
+    !withoutPublicPrefix.startsWith("/img/")
+  ) {
+    return new URL(
+      withoutPublicPrefix.startsWith("/")
+        ? withoutPublicPrefix
+        : `/${withoutPublicPrefix}`,
+      apiBaseUrl,
+    ).toString();
+  }
+
+  return toPublicPath(withoutPublicPrefix);
+}
+
+function getIntroImageAlt(companyName?: string) {
+  const normalizedName = companyName?.trim();
+  if (!normalizedName) {
+    return "Giới thiệu máy công trình nhập khẩu chất lượng cao";
+  }
+
+  return `Giới thiệu ${normalizedName} - máy công trình nhập khẩu chất lượng cao`;
+}
 
 function IntroCompany() {
   const { companyInfo } = useCompanyInfo();
+  const { introInfo } = useIntroCompany();
   const companyName = companyInfo.shortName || companyInfo.name;
+  const introImageCandidates = useMemo(() => {
+    const resolved = getImageSrc(introInfo.introImage);
+    if (!resolved) return [];
+    return [resolved];
+  }, [introInfo.introImage]);
+  const [failedImageSrcs, setFailedImageSrcs] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const introImageSrc = useMemo(
+    () => introImageCandidates.find((src) => !failedImageSrcs.has(src)),
+    [introImageCandidates, failedImageSrcs],
+  );
   const [isCentered, setIsCentered] = useState(false);
   const sectionRef = useRef<HTMLElement | null>(null);
 
@@ -48,18 +104,18 @@ function IntroCompany() {
       <div className="intro-company-inner">
         <div className="intro-company-left">
           <h2 className="intro-company-title">
-            GIỚI THIỆU VỀ <span>{companyName}</span>
+            GIỚI THIỆU VỀ {companyName ? <span>{companyName}</span> : null}
           </h2>
           <p className="intro-company-desc">
-            Công ty xuất nhập khẩu Thuận Phát là tổng đại lý phân phối máy công
-            trình tại Việt Nam. Chúng tôi tự hào vì mang đến những sản phẩm chất
-            lượng, giá tốt để phục vụ mục đích sử dụng của khách hàng.
+            Chúng tôi chuyên cung cấp máy công trình nhập khẩu với chất lượng
+            tốt, vận hành ổn định và phù hợp cho nhiều nhu cầu thi công thực tế.
+            Mỗi sản phẩm đều được kiểm tra kỹ trước khi bàn giao để khách hàng
+            yên tâm sử dụng.
           </p>
           <p className="intro-company-desc">
-            Chúng tôi là công ty độc quyền cung cấp các sản phẩm máy công trình
-            bao gồm máy xúc đào bánh xích, máy xúc đào bánh lốp, máy xúc đào
-            mini, máy xúc đào tổng hợp, máy xúc lật. Rất hân hạnh được hỗ trợ
-            các khách hàng khi ghé xem.
+            Khách hàng được hỗ trợ chế độ bảo hành rõ ràng, đầy đủ giấy tờ theo
+            xe và xuất hóa đơn thuế đầy đủ. Chúng tôi cam kết minh bạch thông
+            tin, đồng hành trong suốt quá trình sử dụng và hậu mãi.
           </p>
 
           <Link to="/about-us" className="intro-company-btn">
@@ -70,12 +126,25 @@ function IntroCompany() {
           </Link>
         </div>
 
-        <div className="intro-company-right">
-          <img
-            src="https://ehsccjufbaehvfovguvm.supabase.co/storage/v1/object/public/Company/Company.png"
-            alt="Máy công trình Thuận Phát"
-          />
-        </div>
+        {introImageSrc ? (
+          <div className="intro-company-right">
+            <img
+              src={introImageSrc}
+              alt={getIntroImageAlt(companyName)}
+              onError={() => {
+                setFailedImageSrcs((prev) => {
+                  const next = new Set(prev);
+                  next.add(introImageSrc);
+                  return next;
+                });
+                console.warn(
+                  "[IntroCompany] Cannot load image:",
+                  introImageSrc,
+                );
+              }}
+            />
+          </div>
+        ) : null}
       </div>
     </section>
   );

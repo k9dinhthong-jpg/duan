@@ -2,16 +2,7 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import "./News.css";
 import { toPublicPath } from "../../utils/publicPath";
-import { useNews } from "../../assets/context/NewsContext";
-
-function slugify(text: string) {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
+import { useNews } from "../../context/NewsContext";
 
 function formatDate(value?: string) {
   if (!value) return "";
@@ -29,6 +20,15 @@ function getImageSrc(image: string) {
   return /^https?:\/\//i.test(image) ? image : toPublicPath(image);
 }
 
+function getNewsImageAlt(title?: string) {
+  const normalizedTitle = title?.trim();
+  if (!normalizedTitle) {
+    return "Hình minh họa bài viết máy công trình";
+  }
+
+  return `${normalizedTitle} - hình ảnh bài viết`;
+}
+
 function News() {
   const { items, isLoading, error } = useNews();
 
@@ -36,7 +36,7 @@ function News() {
     () =>
       items.map((item) => ({
         ...item,
-        slug: item.slug?.trim() || slugify(item.title),
+        slug: item.slug?.trim(),
       })),
     [items],
   );
@@ -66,7 +66,7 @@ function News() {
           <article key={news.id} className="news-item">
             <img
               src={getImageSrc(news.image)}
-              alt={news.title}
+              alt={getNewsImageAlt(news.title)}
               className="news-image"
               loading="lazy"
             />
@@ -84,9 +84,11 @@ function News() {
               </div>
               <h2>{news.title}</h2>
               <p>{news.content}</p>
-              <Link to={`/news/${news.slug}`} className="read-more">
-                Đọc thêm →
-              </Link>
+              {news.slug ? (
+                <Link to={`/news/${news.slug}`} className="read-more">
+                  Đọc thêm →
+                </Link>
+              ) : null}
             </div>
           </article>
         ))}

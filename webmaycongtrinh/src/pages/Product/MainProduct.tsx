@@ -3,9 +3,9 @@ import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import "./MainProduct.css";
 import { toPublicPath } from "../../utils/publicPath";
-import { useProductsHitachi } from "../../assets/context/ProductsHitachi";
-import { useProductsKobelco } from "../../assets/context/ProductsKobelco";
-import { useProductsKomatsu } from "../../assets/context/ProductsKomatsu";
+import { useProductsHitachi } from "../../context/ProductsHitachiContext";
+import { useProductsKobelco } from "../../context/ProductsKobelcoContext";
+import { useProductsKomatsu } from "../../context/ProductsKomatsuContext";
 
 type ProductItem = {
   id: string;
@@ -27,6 +27,20 @@ function getProductModel(product: ProductItem) {
 function getProductDisplay(product: ProductItem) {
   const model = getProductModel(product);
   return product.date ? `${model} (${product.date})` : model;
+}
+
+function getProductImageAlt(product: ProductItem, brand?: string): string {
+  const normalizedAlt = product.alt?.trim();
+  if (normalizedAlt) {
+    return normalizedAlt;
+  }
+
+  const display = getProductDisplay(product);
+  const normalizedBrand = brand?.trim();
+
+  return normalizedBrand
+    ? `${display} - ${normalizedBrand} nhập khẩu`
+    : `${display} - máy công trình nhập khẩu`;
 }
 
 type MainProductGroup = {
@@ -133,7 +147,7 @@ function MainProduct() {
 
         {!isLoading && loadError && (
           <p className="product-state is-error" role="alert">
-            Không thể tải danh sách sản phẩm từ Supabase.
+            Không thể tải danh sách sản phẩm từ backend.
           </p>
         )}
 
@@ -159,7 +173,7 @@ function MainProduct() {
           }
 
           return (
-            <article className="product-group" key={group.groupTitle}>
+            <article className="product-group" key={group.id}>
               <h2 className="product-group-title">{group.groupTitle}</h2>
               <div
                 className={`product-grid-wrapper${isCompactLayout ? " is-compact" : ""}`}
@@ -187,7 +201,7 @@ function MainProduct() {
                         )}
                         <img
                           src={toPublicPath(product.image)}
-                          alt={product.alt}
+                          alt={getProductImageAlt(product, group.brand)}
                           loading="lazy"
                           decoding="async"
                         />
@@ -207,14 +221,14 @@ function MainProduct() {
                                 : "is-available"
                             }`}
                           >
-                            {product.status ?? "Còn hàng"}
+                            {product.status}
                           </span>
                         </p>
                         <p className="product-card-meta">
                           <span className="product-card-meta-label">
                             Liên hệ:
                           </span>{" "}
-                          {product.contact ?? "Liên hệ để biết giá"}
+                          {product.contact}
                         </p>
                         <Link
                           className="product-card-btn"

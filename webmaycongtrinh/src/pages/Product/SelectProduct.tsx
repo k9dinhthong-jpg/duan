@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import "./SelectProduct.css";
 import { toPublicPath } from "../../utils/publicPath";
-import { useProductsHitachi } from "../../assets/context/ProductsHitachi";
-import { useProductsKobelco } from "../../assets/context/ProductsKobelco";
-import { useProductsKomatsu } from "../../assets/context/ProductsKomatsu";
+import { useProductsHitachi } from "../../context/ProductsHitachiContext";
+import { useProductsKobelco } from "../../context/ProductsKobelcoContext";
+import { useProductsKomatsu } from "../../context/ProductsKomatsuContext";
 
 type ProductItem = {
   id: string;
@@ -28,12 +28,15 @@ function getProductDisplay(product: ProductItem) {
   return product.date ? `${model} (${product.date})` : model;
 }
 
-type ProductGroup = {
-  id: string;
-  brand: string;
-  groupTitle: string;
-  products: ProductItem[];
-};
+function getProductImageAlt(product: ProductItem, brand: string): string {
+  const normalizedAlt = product.alt?.trim();
+  if (normalizedAlt) {
+    return normalizedAlt;
+  }
+
+  const display = getProductDisplay(product);
+  return `${display} - ${brand} nhập khẩu`;
+}
 
 function SelectProduct() {
   const { brand = "hitachi" } = useParams<{ brand: string }>();
@@ -53,47 +56,44 @@ function SelectProduct() {
     error: komatsuError,
   } = useProductsKomatsu();
   const [searchParams] = useSearchParams();
-  const [group, setGroup] = useState<ProductGroup | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
-  const [sectionOffset, setSectionOffset] = useState(0);
   const [searchQuery, setSearchQuery] = useState(
     searchParams.get("query") ?? "",
   );
   const [selectedName, setSelectedName] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
 
-  useEffect(() => {
-    setSearchQuery(searchParams.get("query") ?? "");
-  }, [searchParams]);
-
-  useEffect(() => {
+  const brandState = useMemo(() => {
     const normalizedBrand = brand.toLowerCase();
 
     if (normalizedBrand === "hitachi") {
-      setGroup(hitachiGroup);
-      setLoadError(hitachiError ?? "");
-      setIsLoading(isHitachiLoading);
-      return;
+      return {
+        group: hitachiGroup,
+        isLoading: isHitachiLoading,
+        loadError: hitachiError ?? "",
+      };
     }
 
     if (normalizedBrand === "kobelco") {
-      setGroup(kobelcoGroup);
-      setLoadError(kobelcoError ?? "");
-      setIsLoading(isKobelcoLoading);
-      return;
+      return {
+        group: kobelcoGroup,
+        isLoading: isKobelcoLoading,
+        loadError: kobelcoError ?? "",
+      };
     }
 
     if (normalizedBrand === "komatsu") {
-      setGroup(komatsuGroup);
-      setLoadError(komatsuError ?? "");
-      setIsLoading(isKomatsuLoading);
-      return;
+      return {
+        group: komatsuGroup,
+        isLoading: isKomatsuLoading,
+        loadError: komatsuError ?? "",
+      };
     }
 
-    setGroup(null);
-    setIsLoading(false);
-    setLoadError("Không thể tải dữ liệu sản phẩm theo thương hiệu này.");
+    return {
+      group: null,
+      isLoading: false,
+      loadError: "Không thể tải dữ liệu sản phẩm theo thương hiệu này.",
+    };
   }, [
     brand,
     hitachiGroup,
@@ -107,44 +107,7 @@ function SelectProduct() {
     isKomatsuLoading,
   ]);
 
-  useEffect(() => {
-    function updateSectionOffset() {
-      const nav = document.querySelector<HTMLElement>(".site-nav");
-      if (!nav) {
-        return;
-      }
-
-      const gapRaw = getComputedStyle(document.documentElement)
-        .getPropertyValue("--site-nav-gap")
-        .trim();
-      const gapValue = Number.parseFloat(gapRaw);
-      const navGap = Number.isNaN(gapValue) ? 0 : gapValue;
-
-      setSectionOffset(nav.offsetHeight + navGap);
-    }
-
-    let frameId = 0;
-    let retries = 0;
-
-    function syncWithRetry() {
-      updateSectionOffset();
-
-      if (!document.querySelector(".site-nav") && retries < 20) {
-        retries += 1;
-        frameId = window.requestAnimationFrame(syncWithRetry);
-      }
-    }
-
-    syncWithRetry();
-    window.addEventListener("resize", updateSectionOffset);
-    window.addEventListener("scroll", updateSectionOffset, { passive: true });
-
-    return () => {
-      window.cancelAnimationFrame(frameId);
-      window.removeEventListener("resize", updateSectionOffset);
-      window.removeEventListener("scroll", updateSectionOffset);
-    };
-  }, []);
+  const { group, isLoading, loadError } = brandState;
 
   const sortedProducts = useMemo(() => {
     return (group?.products ?? []).slice().sort((a, b) => {
@@ -166,7 +129,9 @@ function SelectProduct() {
   const statusOptions = useMemo(() => {
     return [
       ...new Set([
-        ...sortedProducts.map((product) => product.status ?? "Còn hàng"),
+        ...sortedProducts
+          .map((product) => product.status)
+          .filter((status): status is string => Boolean(status)),
         "Đã bán",
         "Đặt Hàng",
       ]),
@@ -177,7 +142,7 @@ function SelectProduct() {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
     return sortedProducts.filter((product) => {
-      const currentStatus = product.status ?? "Còn hàng";
+      const currentStatus = product.status;
 
       const productModel = getProductModel(product);
       const productDisplay = getProductDisplay(product);
@@ -194,10 +159,8 @@ function SelectProduct() {
   }, [searchQuery, selectedName, selectedStatus, sortedProducts]);
 
   return (
-    <section className="product-page" style={{ marginTop: sectionOffset }}>
-      <h1 className="product-page__title">
-        {group?.groupTitle ?? "MÁY CÔNG TRÌNH HITACHI"}
-      </h1>
+    <section className="product-page">
+      <h1 className="product-page__title">{group?.groupTitle}</h1>
 
       {isLoading && (
         <p className="product-filter__empty" role="status">
@@ -272,7 +235,7 @@ function SelectProduct() {
               <img
                 className="product-card__image"
                 src={toPublicPath(product.image)}
-                alt={product.alt}
+                alt={getProductImageAlt(product, brand)}
                 loading="lazy"
                 decoding="async"
               />
@@ -283,21 +246,25 @@ function SelectProduct() {
                 {getProductDisplay(product)}
               </h2>
 
-              <p className="product-card__meta">
-                <span className="product-card__meta-label">Tình trạng:</span>{" "}
-                <span
-                  className={`product-card__status ${
-                    product.status === "Đã bán" ? "is-sold" : "is-available"
-                  }`}
-                >
-                  {product.status ?? "Còn hàng"}
-                </span>
-              </p>
+              {product.status ? (
+                <p className="product-card__meta">
+                  <span className="product-card__meta-label">Tình trạng:</span>{" "}
+                  <span
+                    className={`product-card__status ${
+                      product.status === "Đã bán" ? "is-sold" : "is-available"
+                    }`}
+                  >
+                    {product.status}
+                  </span>
+                </p>
+              ) : null}
 
-              <p className="product-card__meta">
-                <span className="product-card__meta-label">Liên hệ:</span>{" "}
-                {product.contact ?? "Liên hệ để biết giá"}
-              </p>
+              {product.contact ? (
+                <p className="product-card__meta">
+                  <span className="product-card__meta-label">Liên hệ:</span>{" "}
+                  {product.contact}
+                </p>
+              ) : null}
 
               <Link
                 className="product-card__btn"

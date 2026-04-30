@@ -5,37 +5,38 @@ import "./styles/reset.css";
 import "./styles/variables.css";
 import "./styles/global.css";
 import "./styles/breakpoints.css";
-import { BrowserRouter, HashRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import ErrorBoundary from "./assets/components/ErrorBoundary/ErrorBoundary";
-import { CompanyInfoProvider } from "./assets/context/CompanyInfoContext";
-import { NewsProvider } from "./assets/context/NewsContext";
-import { ProductsHitachiProvider } from "./assets/context/ProductsHitachi";
-import { ProductsKobelcoProvider } from "./assets/context/ProductsKobelco";
-import { ProductsKomatsuProvider } from "./assets/context/ProductsKomatsu";
-
-const useBrowserRouter = import.meta.env.VITE_USE_HASH_ROUTER === "false";
+import { CompanyInfoProvider } from "./context/CompanyInfoContext";
+import { IntroCompanyProvider } from "./context/IntroCompany";
+import { NewsProvider } from "./context/NewsContext";
+import { ProductsHitachiProvider } from "./context/ProductsHitachiContext";
+import { ProductsKobelcoProvider } from "./context/ProductsKobelcoContext";
+import { ProductsKomatsuProvider } from "./context/ProductsKomatsuContext";
+import { MenuBrandProvider } from "./context/MenuBrandContext";
+import { MenuItemsProvider } from "./context/MenuItemsContext";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ErrorBoundary>
       <CompanyInfoProvider>
-        <ProductsHitachiProvider>
-          <ProductsKobelcoProvider>
-            <ProductsKomatsuProvider>
-              <NewsProvider>
-                {useBrowserRouter ? (
-                  <BrowserRouter>
-                    <App />
-                  </BrowserRouter>
-                ) : (
-                  <HashRouter>
-                    <App />
-                  </HashRouter>
-                )}
-              </NewsProvider>
-            </ProductsKomatsuProvider>
-          </ProductsKobelcoProvider>
-        </ProductsHitachiProvider>
+        <IntroCompanyProvider>
+          <ProductsHitachiProvider>
+            <ProductsKobelcoProvider>
+              <ProductsKomatsuProvider>
+                <MenuBrandProvider>
+                  <MenuItemsProvider>
+                    <NewsProvider>
+                      <BrowserRouter>
+                        <App />
+                      </BrowserRouter>
+                    </NewsProvider>
+                  </MenuItemsProvider>
+                </MenuBrandProvider>
+              </ProductsKomatsuProvider>
+            </ProductsKobelcoProvider>
+          </ProductsHitachiProvider>
+        </IntroCompanyProvider>
       </CompanyInfoProvider>
     </ErrorBoundary>
   </StrictMode>,
