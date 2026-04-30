@@ -62,6 +62,28 @@ export type UpdateCustomField = (
 export const COMPANY_STORAGE_KEY = "adminmct:company-info";
 const COMPANY_API_ENDPOINT = "/api/company-info";
 
+export function normalizeKnownMediaPath(path: string): string {
+  const cleanPath = path.trim();
+  if (!cleanPath) {
+    return "";
+  }
+
+  const withSlash = cleanPath.startsWith("/") ? cleanPath : `/${cleanPath}`;
+  return withSlash
+    .replace(/^\/img\/introcompany\//i, "/img/IntroCompany/")
+    .replace(/^\/img\/logo\//i, "/img/Logo/");
+}
+
+function normalizeCompanyMediaFields(company: CompanyInfo): CompanyInfo {
+  return {
+    ...company,
+    logo_url: normalizeKnownMediaPath(company.logo_url),
+    favicon_url: normalizeKnownMediaPath(company.favicon_url),
+    intro_image: normalizeKnownMediaPath(company.intro_image),
+    og_image: normalizeKnownMediaPath(company.og_image),
+  };
+}
+
 export const defaultCompanyInfo: CompanyInfo = {
   id: 1,
   short_name: "MÁY CÔNG TRÌNH NHẬP KHẨU",
@@ -110,20 +132,21 @@ export const defaultCompanyInfo: CompanyInfo = {
 export function loadCompanyFromDatabase(): CompanyInfo {
   const raw = localStorage.getItem(COMPANY_STORAGE_KEY);
   if (!raw) {
-    return defaultCompanyInfo;
+    return normalizeCompanyMediaFields(defaultCompanyInfo);
   }
 
   try {
     const parsed = JSON.parse(raw) as Partial<CompanyInfo>;
-    return {
+    const normalized = {
       ...defaultCompanyInfo,
       ...parsed,
       custom_fields: Array.isArray(parsed.custom_fields)
         ? parsed.custom_fields
         : defaultCompanyInfo.custom_fields,
     };
+    return normalizeCompanyMediaFields(normalized);
   } catch {
-    return defaultCompanyInfo;
+    return normalizeCompanyMediaFields(defaultCompanyInfo);
   }
 }
 
@@ -136,13 +159,14 @@ function getAuthToken(): string {
 }
 
 function normalizeCompanyFromApi(data: Partial<CompanyInfo>): CompanyInfo {
-  return {
+  const normalized = {
     ...defaultCompanyInfo,
     ...data,
     custom_fields: Array.isArray(data.custom_fields)
       ? data.custom_fields
       : defaultCompanyInfo.custom_fields,
   };
+  return normalizeCompanyMediaFields(normalized);
 }
 
 export async function loadCompanyFromApi(): Promise<CompanyInfo | null> {

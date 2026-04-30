@@ -10,11 +10,13 @@ import { warnMissingCollectionFields } from "../lib/schemaGuard";
 export type MenuBrandItem = {
   id: number;
   name: string;
+  brand: string;
   link: string;
 };
 
 type MenuBrandContextValue = {
   productItems: MenuBrandItem[];
+  error: string;
 };
 
 const BRAND_ITEMS_PATH = getConfiguredApiPath(
@@ -51,10 +53,35 @@ function normalizeBrandItems(rows: Record<string, unknown>[]): MenuBrandItem[] {
         return null;
       }
 
+      // Chỉ lấy brand đang active
+      if (Number(row.is_active) === 0) {
+        return null;
+      }
+
+      // Nếu link là URL đầy đủ (https://...) thì chỉ lấy pathname
+      let normalizedLink = trimmedLink;
+      try {
+        const parsed = new URL(trimmedLink);
+        normalizedLink = parsed.pathname;
+      } catch {
+        // link đã là path tương đối, giữ nguyên
+      }
+
+      const brandRaw = row.brand;
+      const brand =
+        typeof brandRaw === "string" && brandRaw.trim() !== ""
+          ? brandRaw.trim().toUpperCase()
+          : (normalizedLink
+              .replace(/\/$/, "")
+              .split("/")
+              .pop()
+              ?.toUpperCase() ?? "");
+
       return {
         id,
         name: trimmedName,
-        link: trimmedLink,
+        brand,
+        link: normalizedLink,
       };
     })
     .filter((item): item is MenuBrandItem => item !== null)
@@ -67,12 +94,14 @@ const MenuBrandContext = createContext<MenuBrandContextValue | undefined>(
 
 export function MenuBrandProvider({ children }: { children: ReactNode }) {
   const [productItems, setProductItems] = useState<MenuBrandItem[]>([]);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let isMounted = true;
 
     async function loadBrandItems() {
       try {
+        setError("");
         const payload = await requestJson(BRAND_ITEMS_PATH);
         if (!isMounted) {
           return;
@@ -87,6 +116,7 @@ export function MenuBrandProvider({ children }: { children: ReactNode }) {
         }
 
         setProductItems([]);
+        setError("Không thể tải danh sách thương hiệu từ API.");
       }
     }
 
@@ -97,7 +127,7 @@ export function MenuBrandProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const value = useMemo(() => ({ productItems }), [productItems]);
+  const value = useMemo(() => ({ productItems, error }), [productItems, error]);
 
   return (
     <MenuBrandContext.Provider value={value}>

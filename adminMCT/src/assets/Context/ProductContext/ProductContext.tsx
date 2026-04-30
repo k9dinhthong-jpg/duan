@@ -3,13 +3,16 @@ import type { ReactNode } from "react";
 
 export type ProductItem = {
   id: string;
-  brand_id: number;
+  brand_id: string;
   name: string;
   link: string;
   owner: string;
   model: string;
   date: string;
   contact: string;
+  note: string;
+  vat: string;
+  origin: string;
   status: string;
   badge: string;
   image: string;
@@ -18,13 +21,16 @@ export type ProductItem = {
 };
 
 export type ProductPayload = {
-  brand_id: number;
+  brand_id: string;
   name: string;
   link: string;
   owner: string;
   model: string;
   date: string;
   contact: string;
+  note: string;
+  vat: string;
+  origin: string;
   status: string;
   badge: string;
   image: string;
@@ -85,15 +91,22 @@ function getAuthToken(): string {
 
 function normalizeProductRow(raw: unknown): ProductItem {
   const item = (raw ?? {}) as Record<string, unknown>;
+  const brandRaw = item.brand_id ?? item.brandId;
   return {
     id: String(item.id ?? ""),
-    brand_id: Number(item.brand_id ?? item.brandId ?? 0) || 0,
+    brand_id:
+      brandRaw === null || typeof brandRaw === "undefined"
+        ? ""
+        : String(brandRaw).trim(),
     name: String(item.name ?? item.title ?? ""),
     link: String(item.link ?? item.url ?? ""),
     owner: String(item.owner ?? ""),
     model: String(item.model ?? ""),
     date: String(item.date ?? ""),
     contact: String(item.contact ?? ""),
+    note: String(item.note ?? ""),
+    vat: String(item.vat ?? ""),
+    origin: String(item.origin ?? ""),
     status: String(item.status ?? ""),
     badge: String(item.badge ?? ""),
     image: String(item.image ?? ""),
@@ -267,6 +280,9 @@ export function ProductContextProvider({
       model: payload.model.trim(),
       date: payload.date.trim(),
       contact: payload.contact.trim(),
+      note: payload.note.trim(),
+      vat: payload.vat.trim(),
+      origin: payload.origin.trim(),
       status: payload.status.trim(),
       badge: payload.badge.trim(),
       image: payload.image.trim(),
@@ -299,6 +315,9 @@ export function ProductContextProvider({
         model: payload.model.trim(),
         date: payload.date.trim(),
         contact: payload.contact.trim(),
+        note: payload.note.trim(),
+        vat: payload.vat.trim(),
+        origin: payload.origin.trim(),
         status: payload.status.trim(),
         badge: payload.badge.trim(),
         image: payload.image.trim(),

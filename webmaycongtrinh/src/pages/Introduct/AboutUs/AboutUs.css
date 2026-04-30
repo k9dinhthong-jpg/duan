@@ -5,23 +5,46 @@
 /* Banner Section */
 .aboutus-banner {
   width: 100%;
-  background: linear-gradient(135deg, #0c1e45 0%, #1a2f5c 100%);
-  padding: calc(var(--site-nav-gap, 0px) + clamp(32px, 5vw, 80px)) 2rem;
+  background: linear-gradient(135deg, #0c1e45 0%, #1a2f5c 60%, #263d7a 100%);
+  padding: calc(var(--site-nav-gap, 0px) + clamp(48px, 6vw, 100px)) 2rem;
   text-align: center;
   color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.aboutus-banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 60% 50%,
+    rgba(95, 108, 163, 0.25) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.aboutus-banner-content {
+  position: relative;
+  z-index: 1;
 }
 
 .aboutus-banner-content h1 {
-  font-size: clamp(28px, 4vw, 48px);
-  margin: 0 0 0.5rem;
-  font-weight: 700;
+  font-size: clamp(32px, 3.5vw, 56px);
+  margin: 0 0 0.75rem;
+  font-weight: 800;
   color: #fff;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+  text-transform: uppercase;
 }
 
 .aboutus-banner-content p {
-  font-size: clamp(16px, 1.2vw, 20px);
+  font-size: clamp(16px, 1.2vw, 22px);
   margin: 0;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 400;
 }
 
 .aboutus-banner-actions {
@@ -65,13 +88,14 @@
 
 /* Main Container */
 .aboutus-container {
-  width: min(1200px, 100% - 2rem);
+  width: 90%;
+  max-width: 1600px;
   margin: 0 auto;
 }
 
 /* Section Styling */
 .aboutus-section {
-  padding: clamp(3rem, 8vw, 5rem) 1rem;
+  padding: clamp(3.5rem, 6vw, 6rem) 1rem;
   background: #fff;
 }
 
@@ -146,23 +170,33 @@
 .aboutus-metric-card {
   background: #ffffff;
   border: 1px solid #e1e7f5;
-  border-radius: 12px;
-  padding: 1.2rem;
+  border-radius: 16px;
+  padding: 2rem 1.5rem;
   text-align: center;
-  box-shadow: 0 4px 12px rgba(25, 39, 75, 0.08);
+  box-shadow: 0 6px 20px rgba(25, 39, 75, 0.08);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.aboutus-metric-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(25, 39, 75, 0.14);
 }
 
 .aboutus-metric-value {
   margin: 0;
-  font-size: clamp(22px, 2.1vw, 34px);
+  font-size: clamp(28px, 2.5vw, 44px);
   font-weight: 800;
   color: #20356c;
+  line-height: 1;
 }
 
 .aboutus-metric-label {
-  margin: 0.35rem 0 0;
-  font-size: clamp(14px, 0.95vw, 16px);
+  margin: 0.5rem 0 0;
+  font-size: clamp(14px, 0.95vw, 17px);
   color: #4a5678;
+  font-weight: 500;
 }
 
 /* Cards Grid */
@@ -174,9 +208,10 @@
 
 .aboutus-card {
   background: #fff;
-  padding: 1.75rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 2.25rem 2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+  border: 1px solid #edf0f8;
   transition:
     transform 0.3s ease,
     box-shadow 0.3s ease;
@@ -184,13 +219,13 @@
 }
 
 .aboutus-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-6px);
+  box-shadow: 0 16px 32px rgba(12, 30, 69, 0.12);
 }
 
 .aboutus-card-icon {
-  font-size: 2.5rem;
-  margin-bottom: 0.75rem;
+  font-size: 3rem;
+  margin-bottom: 1rem;
   display: block;
 }
 
@@ -215,24 +250,30 @@
 
 .aboutus-timeline-item {
   display: grid;
-  grid-template-columns: 110px 1fr;
-  gap: 1rem;
+  grid-template-columns: 120px 1fr;
+  gap: 1.5rem;
   align-items: start;
   background: #fff;
   border: 1px solid #e8ebf3;
-  border-radius: 12px;
-  padding: 1rem;
+  border-radius: 16px;
+  padding: 1.5rem;
+  transition: box-shadow 0.2s ease;
+}
+
+.aboutus-timeline-item:hover {
+  box-shadow: 0 6px 20px rgba(25, 39, 75, 0.1);
 }
 
 .aboutus-timeline-year {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 42px;
-  border-radius: 10px;
-  background: #eef3ff;
+  min-height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #eef3ff, #dce7ff);
   color: #2f4a8a;
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 1.1rem;
 }
 
 .aboutus-timeline-content h3 {
@@ -255,11 +296,19 @@
 }
 
 .aboutus-feature-item {
-  padding: 1.5rem;
+  padding: 1.75rem;
   background: #fff;
-  border-radius: 12px;
-  border-left: 4px solid #5f6ca3;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  border-left: 5px solid #5f6ca3;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.aboutus-feature-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 22px rgba(12, 30, 69, 0.11);
 }
 
 .aboutus-feature-item h4 {

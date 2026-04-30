@@ -11,8 +11,10 @@ import {
 } from "../../Context/ProductContext/ProductContext.tsx";
 import "./Products.css";
 
-const PRODUCT_STATUS_OPTIONS = ["Còn hàng", "Đã bán", "Đặt hàng"] as const;
+const PRODUCT_STATUS_OPTIONS = ["Còn hàng", "Đặt hàng", "Đã bán"] as const;
 const BADGE_OPTIONS = ["", "Hot"] as const;
+const ORIGIN_OPTIONS = ["China", "Japan", "Singgapore"] as const;
+const PRODUCT_PAGE_SIZE = 10;
 const PRODUCT_NAME_PRESETS = [
   "Máy Xúc",
   "Máy Cẩu",
@@ -21,17 +23,27 @@ const PRODUCT_NAME_PRESETS = [
   "Máy Phá Đá",
 ] as const;
 
+function getStatusPillClass(status: string): string {
+  if (status === "Còn hàng") return "status-pill status-pill--available";
+  if (status === "Đặt hàng") return "status-pill status-pill--order";
+  return "status-pill status-pill--sold";
+}
+
 function isPresetName(value: string): boolean {
   return (PRODUCT_NAME_PRESETS as readonly string[]).includes(value);
 }
 
 const OWNER_PRESET_OPTIONS = [
-  { id: "DS", label: "Máy Công Trình Đài Soạn (DS)" },
-  { id: "TV", label: "Máy Công Trình Thảo Vân (TV)" },
+  { id: "DS", label: "Đài Soạn (DS)" },
+  { id: "TV", label: "Thảo Vân (TV)" },
 ] as const;
 
 function isPresetOwner(value: string): boolean {
   return OWNER_PRESET_OPTIONS.some((item) => item.id === value);
+}
+
+function normalizeCompareValue(value: string): string {
+  return value.trim().toLowerCase();
 }
 
 function createSlug(value: string): string {
@@ -46,8 +58,33 @@ function createSlug(value: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+function extractOwnerCode(owner: string): string {
+  const parenMatch = /\(([^)]+)\)/.exec(owner || "");
+  if (parenMatch) {
+    return parenMatch[1].trim().toUpperCase().replace(/\s+/g, "");
+  }
+
+  const upper = (owner || "").replace(/[^A-Za-z]/g, "").toUpperCase();
+  return upper.slice(0, 4) || "XX";
+}
+
 function buildProductLink(name: string): string {
   return `https://maycongtrinhnhapkhau.com.vn/product/${createSlug(name)}`;
+}
+
+function buildProductImageUrl(productCode: string): string {
+  return `https://ehsccjufbaehvfovguvm.supabase.co/storage/v1/object/public/${productCode}/title.jpg`;
+}
+
+function toLocalIsoDate(value: string): string {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) {
+    return "";
+  }
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 const defaultBrandForm: BrandPayload = {
@@ -57,14 +94,17 @@ const defaultBrandForm: BrandPayload = {
 };
 
 const defaultProductForm: ProductPayload = {
-  brand_id: 0,
-  name: "Máy Xúc",
+  brand_id: "",
+  name: "",
   link: "",
-  owner: "DS",
+  owner: "",
   model: "",
-  date: String(new Date().getFullYear()),
-  contact: "",
-  status: "Còn hàng",
+  date: "",
+  contact: "0966121686",
+  note: "",
+  vat: "Liên Hệ",
+  origin: "",
+  status: "",
   badge: "",
   image: "",
   is_active: 1,
@@ -104,18 +144,43 @@ function Products() {
   const [editingBrandId, setEditingBrandId] = useState<number | null>(null);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeSection, setActiveSection] = useState<"brand" | "product">(
-    "brand",
-  );
+  const [activeSection, setActiveSection] = useState<
+    "brand" | "product-form" | "product-list"
+  >("brand");
+  const [productPage, setProductPage] = useState(1);
+  const [filterBrand, setFilterBrand] = useState("");
+  const [filterOwner, setFilterOwner] = useState("");
+  const [filterModel, setFilterModel] = useState("");
+  const [filterOrigin, setFilterOrigin] = useState("");
+  const [filterBadge, setFilterBadge] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterPostedDate, setFilterPostedDate] = useState("");
+  const [filterYear, setFilterYear] = useState("");
   const [createdProduct, setCreatedProduct] = useState<ProductItem | null>(
     null,
   );
 
-  const activeBrands = useMemo(
-    () => brandItems.filter((item) => item.is_active === 1),
-    [brandItems],
-  );
+  const selectedBrandId = useMemo(() => {
+    const selectedBrandCode = productForm.brand_id.trim();
+    if (!selectedBrandCode) {
+      return 0;
+    }
+
+    const byCode = brandItems.find((item) => item.brand === selectedBrandCode);
+    if (byCode) {
+      return byCode.id;
+    }
+
+    const legacyId = Number(selectedBrandCode);
+    if (!Number.isFinite(legacyId) || legacyId <= 0) {
+      return 0;
+    }
+
+    const byLegacyId = brandItems.find((item) => item.id === legacyId);
+    return byLegacyId?.id ?? 0;
+  }, [brandItems, productForm.brand_id]);
 
   const yearOptions = useMemo(() => {
     const currentYear = new Date().getFullYear();
@@ -124,31 +189,244 @@ function Products() {
     );
   }, []);
 
-  useEffect(() => {
-    if (productForm.brand_id > 0) {
-      void loadBrandModels(productForm.brand_id);
-    }
-  }, [productForm.brand_id]);
+  const nextProductCode = useMemo(() => {
+    const ownerCode = extractOwnerCode(productForm.owner);
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2, "0");
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const prefix = `${ownerCode}${dd}${mm}`;
+    const count = productItems.filter((item) =>
+      item.id.startsWith(prefix),
+    ).length;
+    const sequence = String(count + 1).padStart(2, "0");
+    return `${prefix}${sequence}`;
+  }, [productForm.owner, productItems]);
+
+  const productCodeDisplay =
+    editingProductId === null ? nextProductCode : editingProductId;
+  const selectedNameValue = productForm.name.trim()
+    ? isPresetName(productForm.name)
+      ? productForm.name
+      : "__CUSTOM__"
+    : "";
+  const selectedOwnerValue = productForm.owner.trim()
+    ? isPresetOwner(productForm.owner)
+      ? productForm.owner
+      : "__CUSTOM__"
+    : "";
+  const productImageDisplay = useMemo(
+    () => buildProductImageUrl(productCodeDisplay),
+    [productCodeDisplay],
+  );
 
   useEffect(() => {
-    if (productForm.brand_id > 0) {
+    if (selectedBrandId > 0) {
+      void loadBrandModels(selectedBrandId);
       return;
     }
 
-    const firstBrand = activeBrands[0] ?? brandItems[0];
-    if (firstBrand) {
-      setProductForm((prev) => ({ ...prev, brand_id: firstBrand.id }));
-    }
-  }, [activeBrands, brandItems, productForm.brand_id]);
+    setProductForm((prev) => {
+      if (!prev.model) {
+        return prev;
+      }
+      return { ...prev, model: "" };
+    });
+  }, [selectedBrandId]);
 
-  function getBrandName(brandId: number): string {
-    const brand = brandItems.find((item) => item.id === brandId);
+  const sortedProductItems = useMemo(() => {
+    const cloned = [...productItems];
+    cloned.sort((a, b) => {
+      const aTime = Date.parse(a.created_at || "");
+      const bTime = Date.parse(b.created_at || "");
+      if (Number.isNaN(aTime) && Number.isNaN(bTime)) {
+        return b.id.localeCompare(a.id);
+      }
+      if (Number.isNaN(aTime)) return 1;
+      if (Number.isNaN(bTime)) return -1;
+      return bTime - aTime;
+    });
+    return cloned;
+  }, [productItems]);
+
+  const filterBrandOptions = useMemo(() => {
+    return Array.from(
+      new Set(
+        sortedProductItems
+          .map((item) => getBrandCode(item.brand_id))
+          .filter((value) => value.trim() !== ""),
+      ),
+    ).sort((a, b) => a.localeCompare(b));
+  }, [sortedProductItems, brandItems]);
+
+  const filterOwnerOptions = useMemo(() => {
+    return Array.from(
+      new Set(
+        sortedProductItems
+          .map((item) => (item.owner || "").trim())
+          .filter((value) => value !== ""),
+      ),
+    ).sort((a, b) => a.localeCompare(b));
+  }, [sortedProductItems]);
+
+  const filterModelOptions = useMemo(() => {
+    return Array.from(
+      new Set(
+        sortedProductItems
+          .map((item) => (item.model || "").trim())
+          .filter((value) => value !== ""),
+      ),
+    ).sort((a, b) => a.localeCompare(b));
+  }, [sortedProductItems]);
+
+  const filterOriginOptions = useMemo(() => {
+    return Array.from(
+      new Set(
+        sortedProductItems
+          .map((item) => (item.origin || "").trim())
+          .filter((value) => value !== ""),
+      ),
+    ).sort((a, b) => a.localeCompare(b));
+  }, [sortedProductItems]);
+
+  const filterBadgeOptions = useMemo(() => {
+    return Array.from(
+      new Set(
+        sortedProductItems
+          .map((item) => (item.badge || "").trim())
+          .filter((value) => value !== ""),
+      ),
+    ).sort((a, b) => a.localeCompare(b));
+  }, [sortedProductItems]);
+
+  const filterStatusOptions = useMemo(() => {
+    return Array.from(
+      new Set(
+        sortedProductItems
+          .map((item) => (item.status || "").trim())
+          .filter((value) => value !== ""),
+      ),
+    ).sort((a, b) => a.localeCompare(b));
+  }, [sortedProductItems]);
+
+  const filterYearOptions = useMemo(() => {
+    return Array.from(
+      new Set(
+        sortedProductItems
+          .map((item) => (item.date || "").trim())
+          .filter((value) => value !== ""),
+      ),
+    ).sort((a, b) => Number(b) - Number(a));
+  }, [sortedProductItems]);
+
+  const filteredProductItems = useMemo(() => {
+    return sortedProductItems.filter((item) => {
+      const brandCode = getBrandCode(item.brand_id);
+      const owner = (item.owner || "").trim();
+      const model = (item.model || "").trim();
+      const origin = (item.origin || "").trim();
+      const badge = (item.badge || "").trim();
+      const status = (item.status || "").trim();
+      const year = (item.date || "").trim();
+      const postedDate = toLocalIsoDate(item.created_at || "");
+
+      if (filterBrand && brandCode !== filterBrand) return false;
+      if (filterOwner && owner !== filterOwner) return false;
+      if (filterModel && model !== filterModel) return false;
+      if (filterOrigin && origin !== filterOrigin) return false;
+      if (filterStatus && status !== filterStatus) return false;
+      if (filterYear && year !== filterYear) return false;
+      if (filterPostedDate && postedDate !== filterPostedDate) return false;
+
+      if (filterBadge === "__NONE__") {
+        if (badge !== "") return false;
+      } else if (filterBadge && badge !== filterBadge) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [
+    sortedProductItems,
+    filterBrand,
+    filterOwner,
+    filterModel,
+    filterOrigin,
+    filterBadge,
+    filterStatus,
+    filterPostedDate,
+    filterYear,
+    brandItems,
+  ]);
+
+  const totalProductPages = Math.max(
+    1,
+    Math.ceil(filteredProductItems.length / PRODUCT_PAGE_SIZE),
+  );
+
+  const pagedProductItems = useMemo(() => {
+    const start = (productPage - 1) * PRODUCT_PAGE_SIZE;
+    return filteredProductItems.slice(start, start + PRODUCT_PAGE_SIZE);
+  }, [productPage, filteredProductItems]);
+
+  useEffect(() => {
+    setProductPage(1);
+  }, [
+    filterBrand,
+    filterOwner,
+    filterModel,
+    filterOrigin,
+    filterBadge,
+    filterStatus,
+    filterPostedDate,
+    filterYear,
+  ]);
+
+  useEffect(() => {
+    if (productPage > totalProductPages) {
+      setProductPage(totalProductPages);
+    }
+  }, [productPage, totalProductPages]);
+
+  function findBrandByProductBrand(brandValue: string) {
+    const normalized = String(brandValue || "").trim();
+    if (!normalized) {
+      return undefined;
+    }
+
+    const byCode = brandItems.find((item) => item.brand === normalized);
+    if (byCode) {
+      return byCode;
+    }
+
+    const legacyId = Number(normalized);
+    if (!Number.isFinite(legacyId) || legacyId <= 0) {
+      return undefined;
+    }
+
+    return brandItems.find((item) => item.id === legacyId);
+  }
+
+  function getBrandName(brandValue: string): string {
+    const brand = findBrandByProductBrand(brandValue);
     return brand ? brand.name : "Không xác định";
   }
 
-  function getBrandCode(brandId: number): string {
-    const brand = brandItems.find((item) => item.id === brandId);
-    return brand ? brand.brand : "-";
+  function resolveBrandCodeForForm(brandValue: string): string {
+    const brand = findBrandByProductBrand(brandValue);
+    if (brand) {
+      return brand.brand;
+    }
+
+    return String(brandValue || "").trim();
+  }
+
+  function getBrandCode(brandValue: string): string {
+    const brand = findBrandByProductBrand(brandValue);
+    if (brand) {
+      return brand.brand;
+    }
+
+    return brandValue.trim() || "-";
   }
 
   function handleStartEditBrand(id: number) {
@@ -168,7 +446,7 @@ function Products() {
     const target = productItems.find((item) => item.id === id);
     if (!target) return;
 
-    setActiveSection("product");
+    setActiveSection("product-form");
     setEditingProductId(target.id);
     const ownerValue = (target.owner || "").trim();
     const useCustomOwner = ownerValue !== "" && !isPresetOwner(ownerValue);
@@ -180,14 +458,17 @@ function Products() {
     setNewModelInput("");
     setIsAddingModel(false);
     setProductForm({
-      brand_id: target.brand_id,
-      name: nameValue || "Máy Xúc",
+      brand_id: resolveBrandCodeForForm(target.brand_id),
+      name: nameValue,
       link: target.link,
-      owner: ownerValue || "DS",
+      owner: ownerValue,
       model: target.model,
-      date: target.date || String(new Date().getFullYear()),
+      date: target.date || "",
       contact: target.contact,
-      status: target.status || "Còn hàng",
+      note: target.note,
+      vat: target.vat || "Liên Hệ",
+      origin: target.origin || "",
+      status: target.status || "",
       badge: target.badge,
       image: target.image,
       is_active: target.is_active,
@@ -205,17 +486,42 @@ function Products() {
     setCustomNameInput("");
     setNewModelInput("");
     setIsAddingModel(false);
-    setProductForm((prev) => ({
-      ...defaultProductForm,
-      brand_id: prev.brand_id,
-    }));
+    setProductForm(defaultProductForm);
   }
 
   async function handleSubmitBrand(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setFormError("");
 
     if (!brandForm.name.trim() || !brandForm.brand.trim()) {
-      setMessage("Vui lòng nhập tên nhãn hiệu và mã brand.");
+      setFormError("Vui lòng nhập tên nhãn hiệu và mã brand.");
+      return;
+    }
+
+    const normalizedBrandName = normalizeCompareValue(brandForm.name);
+    const normalizedBrandCode = normalizeCompareValue(brandForm.brand);
+
+    const duplicateBrandName = brandItems.some(
+      (item) =>
+        item.id !== editingBrandId &&
+        normalizeCompareValue(item.name) === normalizedBrandName,
+    );
+    if (duplicateBrandName) {
+      setFormError(
+        "Tên thương hiệu đã tồn tại (không phân biệt hoa thường). Vui lòng nhập tên khác.",
+      );
+      return;
+    }
+
+    const duplicateBrandCode = brandItems.some(
+      (item) =>
+        item.id !== editingBrandId &&
+        normalizeCompareValue(item.brand) === normalizedBrandCode,
+    );
+    if (duplicateBrandCode) {
+      setFormError(
+        "Mã thương hiệu đã tồn tại (không phân biệt hoa thường). Vui lòng nhập mã khác.",
+      );
       return;
     }
 
@@ -298,49 +604,90 @@ function Products() {
 
   async function handleSubmitProduct(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setFormError("");
 
-    if (
-      productForm.brand_id <= 0 ||
-      !productForm.name.trim() ||
-      !productForm.owner.trim() ||
-      !productForm.date.trim() ||
-      !productForm.contact.trim() ||
-      !productForm.status.trim()
-    ) {
-      setMessage(
-        "Vui lòng nhập đủ: nhãn hiệu, tên, năm, liên hệ và trạng thái.",
-      );
-      return;
+    {
+      const missing: string[] = [];
+      if (!productForm.brand_id.trim()) missing.push("Nhãn hiệu");
+      if (!productForm.name.trim()) missing.push("Tên sản phẩm");
+      if (!productForm.owner.trim()) missing.push("Đơn vị sở hữu");
+      if (!productForm.model.trim()) missing.push("Dòng máy (Model)");
+      if (!productForm.date.trim()) missing.push("Năm");
+      if (!productForm.contact.trim()) missing.push("Liên hệ");
+      if (!productForm.vat.trim()) missing.push("VAT");
+      if (!productForm.origin.trim()) missing.push("Xuất xứ");
+      if (!productForm.status.trim()) missing.push("Tình trạng");
+      if (missing.length > 0) {
+        setFormError(`Vui lòng nhập đầy đủ: ${missing.join(", ")}.`);
+        return;
+      }
+    }
+
+    if (editingProductId === null) {
+      const normalizedName = normalizeCompareValue(productForm.name);
+      const normalizedOwner = normalizeCompareValue(productForm.owner);
+
+      if (!isPresetName(productForm.name)) {
+        const nameExists = productItems.some(
+          (item) => normalizeCompareValue(item.name) === normalizedName,
+        );
+        if (nameExists) {
+          setFormError(
+            "Tên sản phẩm đã tồn tại (không phân biệt hoa thường). Vui lòng chọn/nhập tên khác.",
+          );
+          return;
+        }
+      }
+
+      if (!isPresetOwner(productForm.owner)) {
+        const ownerExists = productItems.some(
+          (item) => normalizeCompareValue(item.owner) === normalizedOwner,
+        );
+        if (ownerExists) {
+          setFormError(
+            "Đơn vị sở hữu đã tồn tại (không phân biệt hoa thường). Vui lòng chọn/nhập đơn vị khác.",
+          );
+          return;
+        }
+      }
     }
 
     setIsSubmitting(true);
 
+    const productImage = buildProductImageUrl(productCodeDisplay);
+
     const result =
       editingProductId === null
         ? await createProductItem({
-            brand_id: productForm.brand_id,
+            brand_id: productForm.brand_id.trim(),
             name: productForm.name.trim(),
             link: buildProductLink(productForm.name),
             owner: productForm.owner.trim(),
             model: productForm.model.trim(),
             date: productForm.date.trim(),
             contact: productForm.contact.trim(),
+            note: productForm.note.trim(),
+            vat: productForm.vat.trim(),
+            origin: productForm.origin.trim(),
             status: productForm.status.trim(),
             badge: productForm.badge.trim(),
-            image: productForm.image.trim(),
+            image: productImage,
             is_active: productForm.is_active,
           })
         : await updateProductItem(editingProductId, {
-            brand_id: productForm.brand_id,
+            brand_id: productForm.brand_id.trim(),
             name: productForm.name.trim(),
             link: buildProductLink(productForm.name),
             owner: productForm.owner.trim(),
             model: productForm.model.trim(),
             date: productForm.date.trim(),
             contact: productForm.contact.trim(),
+            note: productForm.note.trim(),
+            vat: productForm.vat.trim(),
+            origin: productForm.origin.trim(),
             status: productForm.status.trim(),
             badge: productForm.badge.trim(),
-            image: productForm.image.trim(),
+            image: productImage,
             is_active: productForm.is_active,
           });
 
@@ -396,6 +743,9 @@ function Products() {
       model: target.model,
       date: target.date,
       contact: target.contact,
+      note: target.note,
+      vat: target.vat,
+      origin: target.origin,
       status: target.status,
       badge: target.badge,
       image: target.image,
@@ -441,7 +791,9 @@ function Products() {
       return;
     }
 
-    await loadBrandModels(productForm.brand_id);
+    if (selectedBrandId > 0) {
+      await loadBrandModels(selectedBrandId);
+    }
     setProductForm((prev) => ({ ...prev, model: "" }));
     setMessage(`Đã xóa model: ${selectedModelName}.`);
     setIsSubmitting(false);
@@ -472,11 +824,11 @@ function Products() {
           onClick={() => void handleRefreshAllData()}
           disabled={isRefreshing || isSubmitting}
         >
-          {isRefreshing ? "Đang tải..." : "Tải lại dữ liệu"}
+          {isRefreshing ? "Đang tải..." : "Làm mới"}
         </button>
       </header>
 
-      <div className="mode-tabs" role="tablist" aria-label="Chế độ quản lý">
+      <div className="mode-tabs" role="tablist" aria-label="Phân khu quản lý">
         <button
           type="button"
           className={`mode-tab ${activeSection === "brand" ? "is-active" : ""}`}
@@ -485,29 +837,40 @@ function Products() {
           onClick={() => setActiveSection("brand")}
           disabled={isSubmitting}
         >
-          Quản lý nhãn hiệu
+          Thương hiệu
         </button>
         <button
           type="button"
-          className={`mode-tab ${activeSection === "product" ? "is-active" : ""}`}
+          className={`mode-tab ${activeSection === "product-form" ? "is-active" : ""}`}
           role="tab"
-          aria-selected={activeSection === "product"}
-          onClick={() => setActiveSection("product")}
+          aria-selected={activeSection === "product-form"}
+          onClick={() => setActiveSection("product-form")}
           disabled={isSubmitting}
         >
           Quản lý sản phẩm
+        </button>
+        <button
+          type="button"
+          className={`mode-tab ${activeSection === "product-list" ? "is-active" : ""}`}
+          role="tab"
+          aria-selected={activeSection === "product-list"}
+          onClick={() => setActiveSection("product-list")}
+          disabled={isSubmitting}
+        >
+          Danh sách sản phẩm
         </button>
       </div>
 
       {activeSection === "brand" ? (
         <article className="panel products-panel">
           <div className="panel-head">
-            <h2>1. Quản lý nhãn hiệu</h2>
+            <h2>Quản lý thương hiệu</h2>
+            <span className="panel-count">{brandItems.length} thương hiệu</span>
           </div>
 
           <form className="products-form" onSubmit={handleSubmitBrand}>
             <label className="field field-wide">
-              <span>Tên nhãn hiệu</span>
+              <span>Tên thương hiệu</span>
               <input
                 type="text"
                 value={brandForm.name}
@@ -520,7 +883,7 @@ function Products() {
             </label>
 
             <label className="field field-wide">
-              <span>Mã brand</span>
+              <span>Mã thương hiệu</span>
               <input
                 type="text"
                 value={brandForm.brand}
@@ -553,6 +916,9 @@ function Products() {
               </button>
             </label>
 
+            {formError && activeSection === "brand" ? (
+              <p className="form-error field-wide">{formError}</p>
+            ) : null}
             <div className="products-actions field-wide">
               <button
                 className="primary-btn"
@@ -581,19 +947,29 @@ function Products() {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Nhãn hiệu</th>
-                  <th>Mã brand</th>
-                  <th>Trạng thái</th>
+                  <th>Tên thương hiệu</th>
+                  <th>Mã</th>
+                  <th>Hiển thị</th>
                   <th>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
                 {brandItems.map((item) => (
                   <tr key={item.id}>
-                    <td>#{item.id}</td>
-                    <td>{item.name}</td>
+                    <td className="col-id">#{item.id}</td>
+                    <td className="col-name">{item.name}</td>
                     <td>{item.brand}</td>
-                    <td>{item.is_active === 1 ? "Bật" : "Tắt"}</td>
+                    <td>
+                      <span
+                        className={
+                          item.is_active === 1
+                            ? "status-pill status-pill--available"
+                            : "status-pill status-pill--sold"
+                        }
+                      >
+                        {item.is_active === 1 ? "Đang hiển thị" : "Đã ẩn"}
+                      </span>
+                    </td>
                     <td className="products-row-actions">
                       <button
                         type="button"
@@ -630,13 +1006,26 @@ function Products() {
         </article>
       ) : null}
 
-      {activeSection === "product" ? (
+      {activeSection === "product-form" ? (
         <article className="panel products-panel">
           <div className="panel-head">
-            <h2>2. Quản lý sản phẩm theo nhãn hiệu</h2>
+            <h2>Quản lý sản phẩm</h2>
+            <span className="panel-count">{productItems.length} sản phẩm</span>
           </div>
 
           <form className="products-form" onSubmit={handleSubmitProduct}>
+            <label className="field">
+              <span>Mã sản phẩm</span>
+              <input
+                type="text"
+                value={productCodeDisplay}
+                readOnly
+                disabled
+                className="input-readonly-muted"
+                title="Mã sản phẩm được tạo tự động theo quy tắc hệ thống"
+              />
+            </label>
+
             <label className="field">
               <span>Nhãn hiệu</span>
               <select
@@ -644,14 +1033,16 @@ function Products() {
                 onChange={(e) =>
                   setProductForm((prev) => ({
                     ...prev,
-                    brand_id: Number(e.target.value) || 0,
+                    brand_id: e.target.value,
+                    model: "",
                   }))
                 }
                 disabled={isSubmitting || brandItems.length === 0}
               >
+                <option value="">Lựa chọn</option>
                 {brandItems.map((brand) => (
-                  <option key={brand.id} value={brand.id}>
-                    {brand.name}
+                  <option key={brand.id} value={brand.brand}>
+                    {brand.name} ({brand.brand})
                   </option>
                 ))}
               </select>
@@ -660,13 +1051,14 @@ function Products() {
             <label className="field field-wide">
               <span>Tên sản phẩm</span>
               <select
-                value={
-                  isPresetName(productForm.name)
-                    ? productForm.name
-                    : "__CUSTOM__"
-                }
+                value={selectedNameValue}
                 onChange={(e) => {
                   const next = e.target.value;
+                  if (next === "") {
+                    setCustomNameInput("");
+                    setProductForm((prev) => ({ ...prev, name: "" }));
+                    return;
+                  }
                   if (next === "__CUSTOM__") {
                     setProductForm((prev) => ({
                       ...prev,
@@ -679,18 +1071,19 @@ function Products() {
                 }}
                 disabled={isSubmitting}
               >
+                <option value="">Lựa chọn</option>
                 {PRODUCT_NAME_PRESETS.map((opt) => (
                   <option key={opt} value={opt}>
                     {opt}
                   </option>
                 ))}
-                <option value="__CUSTOM__">Thêm máy...</option>
+                <option value="__CUSTOM__">Thêm loại máy mới...</option>
               </select>
             </label>
 
-            {!isPresetName(productForm.name) ? (
+            {productForm.name.trim() && !isPresetName(productForm.name) ? (
               <label className="field field-wide">
-                <span>Tên máy tùy chỉnh</span>
+                <span>Tên loại máy</span>
                 <input
                   type="text"
                   value={customNameInput}
@@ -708,15 +1101,16 @@ function Products() {
             ) : null}
 
             <label className="field field-wide">
-              <span>Owner</span>
+              <span>Đơn vị sở hữu</span>
               <select
-                value={
-                  isPresetOwner(productForm.owner)
-                    ? productForm.owner
-                    : "__CUSTOM__"
-                }
+                value={selectedOwnerValue}
                 onChange={(e) => {
                   const nextValue = e.target.value;
+                  if (nextValue === "") {
+                    setCustomOwnerInput("");
+                    setProductForm((prev) => ({ ...prev, owner: "" }));
+                    return;
+                  }
                   if (nextValue === "__CUSTOM__") {
                     setProductForm((prev) => ({
                       ...prev,
@@ -730,18 +1124,19 @@ function Products() {
                 }}
                 disabled={isSubmitting}
               >
+                <option value="">Lựa chọn</option>
                 {OWNER_PRESET_OPTIONS.map((owner) => (
                   <option key={owner.id} value={owner.id}>
                     {owner.label}
                   </option>
                 ))}
-                <option value="__CUSTOM__">Thêm lựa chọn mới</option>
+                <option value="__CUSTOM__">Đơn vị khác...</option>
               </select>
             </label>
 
-            {!isPresetOwner(productForm.owner) ? (
+            {productForm.owner.trim() && !isPresetOwner(productForm.owner) ? (
               <label className="field field-wide">
-                <span>Owner tùy chỉnh</span>
+                <span>Tên đơn vị sở hữu</span>
                 <input
                   type="text"
                   value={customOwnerInput}
@@ -753,17 +1148,15 @@ function Products() {
                       owner: nextValue.trim(),
                     }));
                   }}
-                  placeholder="Ví dụ: Máy Công Trình ABC (id AB)"
+                  placeholder="Ví dụ: Công ty Cơ khí ABC (mã AB)"
                   disabled={isSubmitting}
                 />
               </label>
             ) : null}
 
             <label className="field field-wide">
-              <span>Model</span>
-              <div
-                style={{ display: "flex", gap: "6px", alignItems: "center" }}
-              >
+              <span>Dòng máy (Model)</span>
+              <div className="model-inline-row">
                 <select
                   value={productForm.model}
                   onChange={(e) =>
@@ -773,9 +1166,8 @@ function Products() {
                     }))
                   }
                   disabled={isSubmitting}
-                  style={{ flex: 1 }}
                 >
-                  <option value="">-- Chọn model --</option>
+                  <option value="">Lựa chọn</option>
                   {brandModels.map((m) => (
                     <option key={m.id} value={m.model_name}>
                       {m.model_name}
@@ -786,71 +1178,92 @@ function Products() {
                   type="button"
                   className="ghost-btn"
                   onClick={() => setIsAddingModel((v) => !v)}
-                  disabled={isSubmitting || productForm.brand_id <= 0}
-                  title="Thêm model mới cho nhãn hiệu này"
+                  disabled={isSubmitting || selectedBrandId <= 0}
+                  title="Thêm dòng máy mới"
                 >
-                  + Thêm Model
+                  + Thêm
                 </button>
                 <button
                   type="button"
                   className="row-action-btn row-action-btn--danger"
                   onClick={() => void handleDeleteSelectedModel()}
                   disabled={isSubmitting || !productForm.model.trim()}
-                  title="Xóa model đang chọn của nhãn hiệu này"
+                  title="Xóa dòng máy đang chọn"
                 >
-                  Xóa Model
+                  Xóa
                 </button>
               </div>
             </label>
 
             {isAddingModel ? (
-              <div
-                className="field field-wide"
-                style={{ display: "flex", gap: "6px" }}
-              >
-                <input
-                  type="text"
-                  value={newModelInput}
-                  onChange={(e) => setNewModelInput(e.target.value)}
-                  placeholder="Tên model mới, ví dụ: ZX200"
-                  disabled={isSubmitting}
-                  style={{ flex: 1 }}
-                />
-                <button
-                  type="button"
-                  className="primary-btn"
-                  disabled={isSubmitting || !newModelInput.trim()}
-                  onClick={() => {
-                    const name = newModelInput.trim();
-                    if (!name) return;
-                    setIsSubmitting(true);
-                    void addBrandModel(productForm.brand_id, name).then(
-                      (result) => {
-                        if (result.ok) {
-                          setProductForm((prev) => ({ ...prev, model: name }));
-                          setNewModelInput("");
-                          setIsAddingModel(false);
-                        } else {
-                          setMessage(result.message ?? "Thêm model thất bại.");
-                        }
-                        setIsSubmitting(false);
-                      },
-                    );
-                  }}
-                >
-                  Lưu
-                </button>
-                <button
-                  type="button"
-                  className="ghost-btn"
-                  onClick={() => {
-                    setIsAddingModel(false);
-                    setNewModelInput("");
-                  }}
-                  disabled={isSubmitting}
-                >
-                  Hủy
-                </button>
+              <div className="field field-wide">
+                <div className="model-add-row">
+                  <input
+                    type="text"
+                    value={newModelInput}
+                    onChange={(e) => setNewModelInput(e.target.value)}
+                    placeholder="Nhập tên dòng máy mới, ví dụ: ZX200"
+                    disabled={isSubmitting}
+                  />
+                  <button
+                    type="button"
+                    className="primary-btn"
+                    disabled={isSubmitting || !newModelInput.trim()}
+                    onClick={() => {
+                      const name = newModelInput.trim();
+                      if (!name) return;
+
+                      const normalizedName = normalizeCompareValue(name);
+                      const duplicateModel = brandModels.some(
+                        (item) =>
+                          normalizeCompareValue(item.model_name) ===
+                          normalizedName,
+                      );
+                      if (duplicateModel) {
+                        setMessage(
+                          "Model đã tồn tại (không phân biệt hoa thường). Vui lòng nhập model khác.",
+                        );
+                        return;
+                      }
+
+                      if (selectedBrandId <= 0) {
+                        setMessage("Vui lòng chọn thương hiệu hợp lệ trước.");
+                        return;
+                      }
+                      setIsSubmitting(true);
+                      void addBrandModel(selectedBrandId, name).then(
+                        (result) => {
+                          if (result.ok) {
+                            setProductForm((prev) => ({
+                              ...prev,
+                              model: name,
+                            }));
+                            setNewModelInput("");
+                            setIsAddingModel(false);
+                          } else {
+                            setMessage(
+                              result.message ?? "Thêm dòng máy thất bại.",
+                            );
+                          }
+                          setIsSubmitting(false);
+                        },
+                      );
+                    }}
+                  >
+                    Lưu
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost-btn"
+                    onClick={() => {
+                      setIsAddingModel(false);
+                      setNewModelInput("");
+                    }}
+                    disabled={isSubmitting}
+                  >
+                    Hủy
+                  </button>
+                </div>
               </div>
             ) : null}
 
@@ -863,6 +1276,7 @@ function Products() {
                 }
                 disabled={isSubmitting}
               >
+                <option value="">Lựa chọn</option>
                 {yearOptions.map((year) => (
                   <option key={year} value={year}>
                     {year}
@@ -888,6 +1302,43 @@ function Products() {
             </label>
 
             <label className="field">
+              <span>VAT</span>
+              <input
+                type="text"
+                value={productForm.vat}
+                onChange={(e) =>
+                  setProductForm((prev) => ({
+                    ...prev,
+                    vat: e.target.value,
+                  }))
+                }
+                placeholder="Liên Hệ"
+                disabled={isSubmitting}
+              />
+            </label>
+
+            <label className="field">
+              <span>Xuất xứ</span>
+              <select
+                value={productForm.origin}
+                onChange={(e) =>
+                  setProductForm((prev) => ({
+                    ...prev,
+                    origin: e.target.value,
+                  }))
+                }
+                disabled={isSubmitting}
+              >
+                <option value="">Lựa chọn</option>
+                {ORIGIN_OPTIONS.map((origin) => (
+                  <option key={origin} value={origin}>
+                    {origin}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field">
               <span>Tình trạng</span>
               <select
                 value={productForm.status}
@@ -899,6 +1350,7 @@ function Products() {
                 }
                 disabled={isSubmitting}
               >
+                <option value="">Lựa chọn</option>
                 {PRODUCT_STATUS_OPTIONS.map((status) => (
                   <option key={status} value={status}>
                     {status}
@@ -908,7 +1360,7 @@ function Products() {
             </label>
 
             <label className="field">
-              <span>Badge</span>
+              <span>Nhãn nổi bật</span>
               <select
                 value={productForm.badge}
                 onChange={(e) =>
@@ -916,24 +1368,40 @@ function Products() {
                 }
                 disabled={isSubmitting}
               >
+                <option value="">Lựa chọn</option>
                 {BADGE_OPTIONS.map((badge) => (
                   <option key={badge || "none"} value={badge}>
-                    {badge === "" ? "None" : badge}
+                    {badge === "" ? "Không có" : badge}
                   </option>
                 ))}
               </select>
             </label>
 
             <label className="field field-wide">
-              <span>Image</span>
+              <span>Ghi chú</span>
+              <textarea
+                value={productForm.note}
+                onChange={(e) =>
+                  setProductForm((prev) => ({
+                    ...prev,
+                    note: e.target.value,
+                  }))
+                }
+                placeholder="Ví dụ: Máy đẹp, sẵn kho, giấy tờ đầy đủ..."
+                rows={3}
+                disabled={isSubmitting}
+              />
+            </label>
+
+            <label className="field field-wide">
+              <span>Ảnh sản phẩm (URL)</span>
               <input
                 type="url"
-                value={productForm.image}
-                onChange={(e) =>
-                  setProductForm((prev) => ({ ...prev, image: e.target.value }))
-                }
-                placeholder="https://..."
-                disabled={isSubmitting}
+                value={productImageDisplay}
+                readOnly
+                disabled
+                className="input-readonly-muted"
+                title="Link ảnh được tạo tự động theo Mã SP"
               />
             </label>
 
@@ -958,6 +1426,9 @@ function Products() {
               </button>
             </label>
 
+            {formError && activeSection === "product-form" ? (
+              <p className="form-error field-wide">{formError}</p>
+            ) : null}
             <div className="products-actions field-wide">
               <button
                 className="primary-btn"
@@ -980,47 +1451,245 @@ function Products() {
               ) : null}
             </div>
           </form>
+        </article>
+      ) : null}
+
+      {activeSection === "product-list" ? (
+        <article className="panel products-panel">
+          <div className="panel-head">
+            <h2>Danh sách sản phẩm</h2>
+            <span className="panel-count">{productItems.length} sản phẩm</span>
+          </div>
+
+          <div className="products-list-filters">
+            <label className="field">
+              <span>Hãng</span>
+              <select
+                value={filterBrand}
+                onChange={(e) => setFilterBrand(e.target.value)}
+                disabled={isSubmitting}
+              >
+                <option value="">Tất cả</option>
+                {filterBrandOptions.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field">
+              <span>Đơn vị sở hữu</span>
+              <select
+                value={filterOwner}
+                onChange={(e) => setFilterOwner(e.target.value)}
+                disabled={isSubmitting}
+              >
+                <option value="">Tất cả</option>
+                {filterOwnerOptions.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field">
+              <span>Dòng máy</span>
+              <select
+                value={filterModel}
+                onChange={(e) => setFilterModel(e.target.value)}
+                disabled={isSubmitting}
+              >
+                <option value="">Tất cả</option>
+                {filterModelOptions.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field">
+              <span>Xuất xứ</span>
+              <select
+                value={filterOrigin}
+                onChange={(e) => setFilterOrigin(e.target.value)}
+                disabled={isSubmitting}
+              >
+                <option value="">Tất cả</option>
+                {filterOriginOptions.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field">
+              <span>Nhãn</span>
+              <select
+                value={filterBadge}
+                onChange={(e) => setFilterBadge(e.target.value)}
+                disabled={isSubmitting}
+              >
+                <option value="">Tất cả</option>
+                <option value="__NONE__">Không có</option>
+                {filterBadgeOptions.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field">
+              <span>Trạng thái</span>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                disabled={isSubmitting}
+              >
+                <option value="">Tất cả</option>
+                {filterStatusOptions.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field">
+              <span>Ngày đăng</span>
+              <input
+                type="date"
+                value={filterPostedDate}
+                onChange={(e) => setFilterPostedDate(e.target.value)}
+                disabled={isSubmitting}
+              />
+            </label>
+
+            <label className="field">
+              <span>Năm</span>
+              <select
+                value={filterYear}
+                onChange={(e) => setFilterYear(e.target.value)}
+                disabled={isSubmitting}
+              >
+                <option value="">Tất cả</option>
+                {filterYearOptions.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="products-list-filters__actions">
+              <button
+                type="button"
+                className="ghost-btn"
+                onClick={() => {
+                  setFilterBrand("");
+                  setFilterOwner("");
+                  setFilterModel("");
+                  setFilterOrigin("");
+                  setFilterBadge("");
+                  setFilterStatus("");
+                  setFilterPostedDate("");
+                  setFilterYear("");
+                }}
+                disabled={isSubmitting}
+              >
+                Xóa bộ lọc
+              </button>
+            </div>
+          </div>
 
           <div className="table-wrap">
             <table className="products-table">
               <thead>
                 <tr>
+                  <th>STT</th>
                   <th>Mã SP</th>
-                  <th>Nhãn hiệu</th>
+                  <th>Thương hiệu</th>
                   <th>Tên sản phẩm</th>
-                  <th>Owner</th>
-                  <th>Model</th>
-                  <th>Năm</th>
+                  <th>Đơn vị</th>
+                  <th>Dòng máy</th>
+                  <th>Năm SX</th>
                   <th>Liên hệ</th>
+                  <th>Ghi chú</th>
+                  <th>VAT</th>
+                  <th>Xuất xứ</th>
                   <th>Tình trạng</th>
-                  <th>Badge</th>
-                  <th>Image</th>
-                  <th>Hiển thị</th>
+                  <th>Nhãn</th>
+                  <th>Ảnh</th>
+                  <th>Trạng thái</th>
                   <th>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
-                {productItems.map((item) => (
+                {pagedProductItems.map((item, index) => (
                   <tr key={item.id}>
-                    <td>{item.id}</td>
+                    <td className="col-id">
+                      {(productPage - 1) * PRODUCT_PAGE_SIZE + index + 1}
+                    </td>
+                    <td className="col-id">{item.id}</td>
                     <td>{getBrandCode(item.brand_id)}</td>
-                    <td>{item.name}</td>
+                    <td className="col-name">{item.name}</td>
                     <td>{item.owner || "-"}</td>
-                    <td>{item.model}</td>
+                    <td>{item.model || "-"}</td>
                     <td>{item.date}</td>
                     <td>{item.contact}</td>
-                    <td>{item.status}</td>
-                    <td>{item.badge || "None"}</td>
+                    <td>{item.note || "-"}</td>
+                    <td>{item.vat || "-"}</td>
+                    <td>{item.origin || "-"}</td>
+                    <td>
+                      <span className={getStatusPillClass(item.status)}>
+                        {item.status}
+                      </span>
+                    </td>
+                    <td>
+                      {item.badge ? (
+                        <span className="badge-tag">{item.badge}</span>
+                      ) : (
+                        <span
+                          style={{
+                            color: "var(--color-text-muted)",
+                            fontSize: "12px",
+                          }}
+                        >
+                          —
+                        </span>
+                      )}
+                    </td>
                     <td>
                       {item.image ? (
                         <a href={item.image} target="_blank" rel="noreferrer">
-                          Ảnh
+                          Xem ảnh
                         </a>
                       ) : (
-                        "-"
+                        <span
+                          style={{
+                            color: "var(--color-text-muted)",
+                            fontSize: "12px",
+                          }}
+                        >
+                          —
+                        </span>
                       )}
                     </td>
-                    <td>{item.is_active === 1 ? "Bật" : "Tắt"}</td>
+                    <td>
+                      <span
+                        className={
+                          item.is_active === 1
+                            ? "status-pill status-pill--available"
+                            : "status-pill status-pill--sold"
+                        }
+                      >
+                        {item.is_active === 1 ? "Hiển thị" : "Đã ẩn"}
+                      </span>
+                    </td>
                     <td className="products-row-actions">
                       <button
                         type="button"
@@ -1051,8 +1720,39 @@ function Products() {
                     </td>
                   </tr>
                 ))}
+                {pagedProductItems.length === 0 ? (
+                  <tr>
+                    <td colSpan={16} className="products-empty">
+                      Không có sản phẩm phù hợp bộ lọc.
+                    </td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
+          </div>
+          <div className="products-pagination">
+            <button
+              type="button"
+              className="ghost-btn"
+              onClick={() => setProductPage((prev) => Math.max(1, prev - 1))}
+              disabled={productPage === 1 || isSubmitting}
+            >
+              Trang trước
+            </button>
+            <span className="products-pagination__info">
+              Trang {productPage}/{totalProductPages} -{" "}
+              {filteredProductItems.length} kết quả
+            </span>
+            <button
+              type="button"
+              className="ghost-btn"
+              onClick={() =>
+                setProductPage((prev) => Math.min(totalProductPages, prev + 1))
+              }
+              disabled={productPage === totalProductPages || isSubmitting}
+            >
+              Trang sau
+            </button>
           </div>
         </article>
       ) : null}
@@ -1068,88 +1768,114 @@ function Products() {
             className="product-confirm-modal"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="product-confirm-title">
-              ✅ Thêm sản phẩm thành công
-            </h3>
-            <table className="product-confirm-table">
-              <tbody>
-                <tr>
-                  <th>Mã SP</th>
-                  <td>{createdProduct.id}</td>
-                </tr>
-                <tr>
-                  <th>Nhãn hiệu</th>
-                  <td>{getBrandName(createdProduct.brand_id)}</td>
-                </tr>
-                <tr>
-                  <th>Tên sản phẩm</th>
-                  <td>{createdProduct.name}</td>
-                </tr>
-                <tr>
-                  <th>Owner</th>
-                  <td>{createdProduct.owner || "-"}</td>
-                </tr>
-                <tr>
-                  <th>Model</th>
-                  <td>{createdProduct.model || "-"}</td>
-                </tr>
-                <tr>
-                  <th>Năm</th>
-                  <td>{createdProduct.date || "-"}</td>
-                </tr>
-                <tr>
-                  <th>Liên hệ</th>
-                  <td>{createdProduct.contact || "-"}</td>
-                </tr>
-                <tr>
-                  <th>Tình trạng</th>
-                  <td>{createdProduct.status || "-"}</td>
-                </tr>
-                <tr>
-                  <th>Badge</th>
-                  <td>{createdProduct.badge || "None"}</td>
-                </tr>
-                <tr>
-                  <th>Ảnh</th>
-                  <td>
-                    {createdProduct.image ? (
+            <div className="product-confirm-head">
+              <span className="product-confirm-icon">✅</span>
+              <div>
+                <h3 className="product-confirm-title">
+                  Thêm sản phẩm thành công
+                </h3>
+                <p className="product-confirm-subtitle">
+                  Sản phẩm đã được lưu vào hệ thống.
+                </p>
+              </div>
+            </div>
+            <div className="product-confirm-body">
+              <table className="product-confirm-table">
+                <tbody>
+                  <tr>
+                    <th>Mã SP</th>
+                    <td>{createdProduct.id}</td>
+                  </tr>
+                  <tr>
+                    <th>Thương hiệu</th>
+                    <td>{getBrandName(createdProduct.brand_id)}</td>
+                  </tr>
+                  <tr>
+                    <th>Tên sản phẩm</th>
+                    <td>{createdProduct.name}</td>
+                  </tr>
+                  <tr>
+                    <th>Đơn vị</th>
+                    <td>{createdProduct.owner || "-"}</td>
+                  </tr>
+                  <tr>
+                    <th>Dòng máy</th>
+                    <td>{createdProduct.model || "-"}</td>
+                  </tr>
+                  <tr>
+                    <th>Năm SX</th>
+                    <td>{createdProduct.date || "-"}</td>
+                  </tr>
+                  <tr>
+                    <th>Liên hệ</th>
+                    <td>{createdProduct.contact || "-"}</td>
+                  </tr>
+                  <tr>
+                    <th>Ghi chú</th>
+                    <td>{createdProduct.note || "-"}</td>
+                  </tr>
+                  <tr>
+                    <th>VAT</th>
+                    <td>{createdProduct.vat || "-"}</td>
+                  </tr>
+                  <tr>
+                    <th>Xuất xứ</th>
+                    <td>{createdProduct.origin || "-"}</td>
+                  </tr>
+                  <tr>
+                    <th>Tình trạng</th>
+                    <td>{createdProduct.status || "-"}</td>
+                  </tr>
+                  <tr>
+                    <th>Nhãn nổi bật</th>
+                    <td>{createdProduct.badge || "Không có"}</td>
+                  </tr>
+                  <tr>
+                    <th>Ảnh sản phẩm</th>
+                    <td>
+                      {createdProduct.image ? (
+                        <a
+                          href={createdProduct.image}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {createdProduct.image}
+                        </a>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Trạng thái</th>
+                    <td>
+                      {createdProduct.is_active === 1 ? "Hiển thị" : "Đã ẩn"}
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Link</th>
+                    <td>
                       <a
-                        href={createdProduct.image}
+                        href={createdProduct.link}
                         target="_blank"
                         rel="noreferrer"
                       >
-                        {createdProduct.image}
+                        {createdProduct.link}
                       </a>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                </tr>
-                <tr>
-                  <th>Hiển thị</th>
-                  <td>{createdProduct.is_active === 1 ? "Bật" : "Tắt"}</td>
-                </tr>
-                <tr>
-                  <th>Link</th>
-                  <td>
-                    <a
-                      href={createdProduct.link}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {createdProduct.link}
-                    </a>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <button
-              type="button"
-              className="primary-btn product-confirm-close"
-              onClick={() => setCreatedProduct(null)}
-            >
-              Đóng
-            </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div className="product-confirm-footer">
+              <button
+                type="button"
+                className="primary-btn"
+                onClick={() => setCreatedProduct(null)}
+              >
+                Đóng
+              </button>
+            </div>
           </div>
         </div>
       ) : null}

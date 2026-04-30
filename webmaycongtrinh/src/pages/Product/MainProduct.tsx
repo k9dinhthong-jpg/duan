@@ -2,46 +2,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import "./MainProduct.css";
-import { toPublicPath } from "../../utils/publicPath";
-import { useProductsHitachi } from "../../context/ProductsHitachiContext";
-import { useProductsKobelco } from "../../context/ProductsKobelcoContext";
-import { useProductsKomatsu } from "../../context/ProductsKomatsuContext";
-
-type ProductItem = {
-  id: string;
-  model?: string;
-  name?: string;
-  date?: string;
-  contact?: string;
-  price: string;
-  status?: string;
-  badge?: "Hot" | null;
-  image: string;
-  alt: string;
-};
-
-function getProductModel(product: ProductItem) {
-  return product.model ?? product.name ?? product.id;
-}
-
-function getProductDisplay(product: ProductItem) {
-  const model = getProductModel(product);
-  return product.date ? `${model} (${product.date})` : model;
-}
-
-function getProductImageAlt(product: ProductItem, brand?: string): string {
-  const normalizedAlt = product.alt?.trim();
-  if (normalizedAlt) {
-    return normalizedAlt;
-  }
-
-  const display = getProductDisplay(product);
-  const normalizedBrand = brand?.trim();
-
-  return normalizedBrand
-    ? `${display} - ${normalizedBrand} nhập khẩu`
-    : `${display} - máy công trình nhập khẩu`;
-}
+import { useListAllProducts } from "../../context/ListAllProducts";
+import { useMenuBrand } from "../../context/MenuBrandContext";
+import {
+  toProductItem,
+  getProductTitle,
+  getProductImageSrc,
+  getProductImageAlt,
+} from "../../utils/productHelpers";
 
 type MainProductGroup = {
   id: string;
@@ -53,33 +21,43 @@ type MainProductGroup = {
 type ScrollState = { atStart: boolean; atEnd: boolean };
 
 function MainProduct() {
+  const { productItems: brandItems } = useMenuBrand();
   const {
-    hitachiGroup,
-    isLoading: isHitachiLoading,
-    error: hitachiError,
-  } = useProductsHitachi();
-  const {
-    kobelcoGroup,
-    isLoading: isKobelcoLoading,
-    error: kobelcoError,
-  } = useProductsKobelco();
-  const {
-    komatsuGroup,
-    isLoading: isKomatsuLoading,
-    error: komatsuError,
-  } = useProductsKomatsu();
+    productItems: allProductItems,
+    isLoading,
+    error: loadError,
+  } = useListAllProducts();
   const [sectionOffset, setSectionOffset] = useState(0);
   const gridRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [scrollStates, setScrollStates] = useState<Record<string, ScrollState>>(
     {},
   );
-  const groups = useMemo<MainProductGroup[]>(
-    () => [hitachiGroup, kobelcoGroup, komatsuGroup],
-    [hitachiGroup, kobelcoGroup, komatsuGroup],
-  );
+  const groups = useMemo<MainProductGroup[]>(() => {
+    return brandItems.map((brand) => {
+      const normalizedBrand = brand.brand.trim().toUpperCase();
+      const products = allProductItems.map(toProductItem).filter((product) => {
+        if (!product.id || !product.brandId) {
+          return false;
+        }
 
-  const isLoading = isHitachiLoading || isKobelcoLoading || isKomatsuLoading;
-  const loadError = hitachiError || kobelcoError || komatsuError || "";
+        const normalizedStatus = (product.status ?? "")
+          .trim()
+          .toLocaleLowerCase("vi-VN");
+        const isNotSold = normalizedStatus !== "đã bán";
+
+        return (
+          product.isActive && isNotSold && product.brandId === normalizedBrand
+        );
+      });
+
+      return {
+        id: String(brand.id),
+        brand: normalizedBrand,
+        groupTitle: brand.name,
+        products,
+      };
+    });
+  }, [allProductItems, brandItems]);
 
   function updateScrollState(id: string, el: HTMLDivElement) {
     setScrollStates((prev) => ({
@@ -140,7 +118,7 @@ function MainProduct() {
         style={{ marginTop: sectionOffset + 12 }}
       >
         {isLoading && (
-          <p className="product-state" role="status">
+          <p className="product-state" role="status" aria-busy="true">
             Đang tải danh sách sản phẩm...
           </p>
         )}
@@ -200,7 +178,7 @@ function MainProduct() {
                           <span className="product-card-badge">HOT</span>
                         )}
                         <img
-                          src={toPublicPath(product.image)}
+                          src={getProductImageSrc(product.image)}
                           alt={getProductImageAlt(product, group.brand)}
                           loading="lazy"
                           decoding="async"
@@ -208,31 +186,49 @@ function MainProduct() {
                       </div>
                       <div className="product-card-content">
                         <h3 className="product-card-title">
-                          {getProductDisplay(product)}
+                          {getProductTitle(product)}
                         </h3>
                         <p className="product-card-meta">
                           <span className="product-card-meta-label">
-                            Tình trạng:
+                            Mã sản phẩm:
                           </span>{" "}
-                          <span
-                            className={`product-card-status ${
-                              product.status === "Đã bán"
-                                ? "is-sold"
-                                : "is-available"
-                            }`}
-                          >
-                            {product.status}
-                          </span>
+                          {product.id}
                         </p>
-                        <p className="product-card-meta">
-                          <span className="product-card-meta-label">
-                            Liên hệ:
-                          </span>{" "}
-                          {product.contact}
-                        </p>
+                        {product.origin ? (
+                          <p className="product-card-meta">
+                            <span className="product-card-meta-label">
+                              Xuất xứ:
+                            </span>{" "}
+                            {product.origin}
+                          </p>
+                        ) : null}
+                        {product.vat ? (
+                          <p className="product-card-meta">
+                            <span className="product-card-meta-label">
+                              VAT:
+                            </span>{" "}
+                            {product.vat}
+                          </p>
+                        ) : null}
+                        {product.status ? (
+                          <p className="product-card-meta">
+                            <span className="product-card-meta-label">
+                              Trạng thái:
+                            </span>{" "}
+                            <span
+                              className={`product-card-status ${
+                                product.status === "Đã bán"
+                                  ? "is-sold"
+                                  : "is-available"
+                              }`}
+                            >
+                              {product.status}
+                            </span>
+                          </p>
+                        ) : null}
                         <Link
                           className="product-card-btn"
-                          to={`/product/${group.brand.toLowerCase()}?query=${encodeURIComponent(product.id)}`}
+                          to={`/product/${group.brand.toLowerCase()}?productId=${encodeURIComponent(product.id)}&brandId=${encodeURIComponent(group.brand)}`}
                         >
                           Xem chi tiết
                         </Link>
@@ -251,7 +247,7 @@ function MainProduct() {
               </div>
               <Link
                 className="product-group-btn"
-                to={`/product/${group.brand.toLowerCase()}`}
+                to={`/product/${group.brand.toLowerCase()}?brandId=${group.brand}`}
               >
                 <span className="product-group-btn-label">Xem tất cả</span>
                 <span className="product-group-btn-icon" aria-hidden="true">

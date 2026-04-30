@@ -1061,7 +1061,7 @@ async function createBrandItem(req, res) {
         "INSERT INTO product_items (id, brand_id, name, link, owner, model, `date`, contact, status, price, badge, image, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
           generatedId,
-          insertedId,
+          payload.brand,
           payload.name,
           payload.link,
           "DS",
@@ -1136,8 +1136,18 @@ async function deleteBrandItem(req, res) {
   }
 
   try {
+    const [brandRows] = await mariaPool.execute(
+      "SELECT brand FROM brand_items WHERE id = ? LIMIT 1",
+      [id],
+    );
+    const targetBrand = Array.isArray(brandRows) ? brandRows[0] : null;
+
+    if (!targetBrand) {
+      return res.status(404).json({ message: "Không tìm thấy nhãn hiệu." });
+    }
+
     await mariaPool.execute("DELETE FROM product_items WHERE brand_id = ?", [
-      id,
+      String(targetBrand.brand || "").trim(),
     ]);
     await mariaPool.execute("DELETE FROM brand_models WHERE brand_id = ?", [
       id,
@@ -1252,6 +1262,15 @@ function normalizeProductPayload(body) {
   const model = typeof body?.model === "string" ? body.model.trim() : "";
   const date = typeof body?.date === "string" ? body.date.trim() : "";
   const contact = typeof body?.contact === "string" ? body.contact.trim() : "";
+  const note = typeof body?.note === "string" ? body.note.trim() : "";
+  const vat = typeof body?.vat === "string" ? body.vat.trim() : "";
+  const origin = typeof body?.origin === "string" ? body.origin.trim() : "";
+  const location =
+    typeof body?.location === "string" ? body.location.trim() : "";
+  const operatingHours =
+    typeof body?.operating_hours === "string"
+      ? body.operating_hours.trim()
+      : "";
   const status = typeof body?.status === "string" ? body.status.trim() : "";
   const price = typeof body?.price === "string" ? body.price.trim() : "";
   const badge = typeof body?.badge === "string" ? body.badge.trim() : "";
@@ -1259,12 +1278,13 @@ function normalizeProductPayload(body) {
   const sortOrder = Number.isFinite(Number(body?.sort_order))
     ? Number(body.sort_order)
     : 0;
-  const brandId =
-    body?.brand_id === null || body?.brand_id === ""
-      ? null
-      : Number.isFinite(Number(body?.brand_id)) && Number(body?.brand_id) > 0
-        ? Number(body.brand_id)
-        : null;
+  const brandIdRaw =
+    typeof body?.brand_id === "string"
+      ? body.brand_id
+      : body?.brand_id === null || typeof body?.brand_id === "undefined"
+        ? ""
+        : String(body.brand_id);
+  const brandId = brandIdRaw.trim();
 
   return {
     brand_id: brandId,
@@ -1274,6 +1294,11 @@ function normalizeProductPayload(body) {
     model,
     date,
     contact,
+    note,
+    vat,
+    origin,
+    location,
+    operating_hours: operatingHours,
     status,
     price,
     badge,
@@ -1288,14 +1313,19 @@ function mapProductRow(row) {
     id: String(row.id || ""),
     brand_id:
       row.brand_id === null || typeof row.brand_id === "undefined"
-        ? null
-        : Number(row.brand_id || 0),
+        ? ""
+        : String(row.brand_id || "").trim(),
     name: row.name || "",
     link: row.link || "",
     owner: row.owner || "",
     model: row.model || "",
     date: row.date || "",
     contact: row.contact || "",
+    note: row.note || "",
+    vat: row.vat || "",
+    origin: row.origin || "",
+    location: row.location || "",
+    operating_hours: row.operating_hours || "",
     status: row.status || "",
     price: row.price || "",
     badge: row.badge || "",
@@ -1309,7 +1339,7 @@ function mapProductRow(row) {
 async function listProductItems(_req, res) {
   try {
     const [rows] = await mariaPool.query(
-      "SELECT id, brand_id, name, link, owner, model, `date`, contact, status, price, badge, image, sort_order, is_active, created_at FROM product_items ORDER BY sort_order ASC, created_at DESC",
+      "SELECT id, brand_id, name, link, owner, model, `date`, contact, note, vat, origin, location, operating_hours, status, price, badge, image, sort_order, is_active, created_at FROM product_items ORDER BY sort_order ASC, created_at DESC",
     );
     return res.json((Array.isArray(rows) ? rows : []).map(mapProductRow));
   } catch (err) {
@@ -1324,15 +1354,25 @@ app.get("/api/products", requireAuth, listProductItems);
 
 async function createProductItem(req, res) {
   const payload = normalizeProductPayload(req.body || {});
-  if (!payload.name || !payload.link || !payload.owner) {
-    return res.status(400).json({ message: "Thiếu name, link hoặc owner." });
+  if (!payload.brand_id || !payload.name || !payload.link || !payload.owner) {
+    return res
+      .status(400)
+      .json({ message: "Thiếu brand_id, name, link hoặc owner." });
   }
 
   try {
+    const [brandRows] = await mariaPool.execute(
+      "SELECT id FROM brand_items WHERE brand = ? LIMIT 1",
+      [payload.brand_id],
+    );
+    if (!Array.isArray(brandRows) || brandRows.length === 0) {
+      return res.status(400).json({ message: "brand_id không hợp lệ." });
+    }
+
     const generatedId = await generateNextProductId(payload.owner);
 
     const [result] = await mariaPool.execute(
-      "INSERT INTO product_items (id, brand_id, name, link, owner, model, `date`, contact, status, price, badge, image, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO product_items (id, brand_id, name, link, owner, model, `date`, contact, note, vat, origin, location, operating_hours, status, price, badge, image, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         generatedId,
         payload.brand_id,
@@ -1342,6 +1382,11 @@ async function createProductItem(req, res) {
         payload.model,
         payload.date,
         payload.contact,
+        payload.note,
+        payload.vat,
+        payload.origin,
+        payload.location,
+        payload.operating_hours,
         payload.status,
         payload.price,
         payload.badge,
@@ -1353,7 +1398,7 @@ async function createProductItem(req, res) {
 
     const insertedId = generatedId;
     const [rows] = await mariaPool.execute(
-      "SELECT id, brand_id, name, link, owner, model, `date`, contact, status, price, badge, image, sort_order, is_active, created_at FROM product_items WHERE id = ? LIMIT 1",
+      "SELECT id, brand_id, name, link, owner, model, `date`, contact, note, vat, origin, location, operating_hours, status, price, badge, image, sort_order, is_active, created_at FROM product_items WHERE id = ? LIMIT 1",
       [insertedId],
     );
     const row = Array.isArray(rows) ? rows[0] : null;
@@ -1374,13 +1419,23 @@ async function updateProductItem(req, res) {
   }
 
   const payload = normalizeProductPayload(req.body || {});
-  if (!payload.name || !payload.link || !payload.owner) {
-    return res.status(400).json({ message: "Thiếu name, link hoặc owner." });
+  if (!payload.brand_id || !payload.name || !payload.link || !payload.owner) {
+    return res
+      .status(400)
+      .json({ message: "Thiếu brand_id, name, link hoặc owner." });
   }
 
   try {
+    const [brandRows] = await mariaPool.execute(
+      "SELECT id FROM brand_items WHERE brand = ? LIMIT 1",
+      [payload.brand_id],
+    );
+    if (!Array.isArray(brandRows) || brandRows.length === 0) {
+      return res.status(400).json({ message: "brand_id không hợp lệ." });
+    }
+
     const [result] = await mariaPool.execute(
-      "UPDATE product_items SET brand_id = ?, name = ?, link = ?, owner = ?, model = ?, `date` = ?, contact = ?, status = ?, price = ?, badge = ?, image = ?, sort_order = ?, is_active = ? WHERE id = ?",
+      "UPDATE product_items SET brand_id = ?, name = ?, link = ?, owner = ?, model = ?, `date` = ?, contact = ?, note = ?, vat = ?, origin = ?, location = ?, operating_hours = ?, status = ?, price = ?, badge = ?, image = ?, sort_order = ?, is_active = ? WHERE id = ?",
       [
         payload.brand_id,
         payload.name,
@@ -1389,6 +1444,11 @@ async function updateProductItem(req, res) {
         payload.model,
         payload.date,
         payload.contact,
+        payload.note,
+        payload.vat,
+        payload.origin,
+        payload.location,
+        payload.operating_hours,
         payload.status,
         payload.price,
         payload.badge,
@@ -1404,7 +1464,7 @@ async function updateProductItem(req, res) {
     }
 
     const [rows] = await mariaPool.execute(
-      "SELECT id, brand_id, name, link, owner, model, `date`, contact, status, price, badge, image, sort_order, is_active, created_at FROM product_items WHERE id = ? LIMIT 1",
+      "SELECT id, brand_id, name, link, owner, model, `date`, contact, note, vat, origin, location, operating_hours, status, price, badge, image, sort_order, is_active, created_at FROM product_items WHERE id = ? LIMIT 1",
       [id],
     );
     const row = Array.isArray(rows) ? rows[0] : null;
@@ -1489,7 +1549,7 @@ async function ensureCompanyColumns() {
 
 async function ensureProductColumns() {
   const productColumns = [
-    ["brand_id", "INT UNSIGNED NULL"],
+    ["brand_id", "VARCHAR(100) NULL"],
     ["owner", "VARCHAR(120) NOT NULL DEFAULT ''"],
     ["model", "VARCHAR(255) NOT NULL DEFAULT ''"],
     ["date", "VARCHAR(120) NOT NULL DEFAULT ''"],
@@ -1578,7 +1638,40 @@ async function ensureBrandTable() {
   );
 
   await mariaPool.query(
-    "UPDATE product_items p LEFT JOIN brand_items b ON b.name = p.name SET p.brand_id = b.id WHERE p.brand_id IS NULL AND b.id IS NOT NULL",
+    "UPDATE product_items p LEFT JOIN brand_items b ON b.name = p.name SET p.brand_id = b.brand WHERE (p.brand_id IS NULL OR p.brand_id = '') AND b.brand IS NOT NULL",
+  );
+
+  await mariaPool.query(
+    "UPDATE product_items p JOIN brand_items b ON p.brand_id = CAST(b.id AS CHAR) SET p.brand_id = b.brand WHERE p.brand_id REGEXP '^[0-9]+$'",
+  );
+}
+
+async function ensureProductBrandIdAsCode() {
+  const [brandIdRows] = await mariaPool.query(
+    "SHOW COLUMNS FROM product_items LIKE 'brand_id'",
+  );
+  const brandIdCol =
+    Array.isArray(brandIdRows) && brandIdRows[0] ? brandIdRows[0] : null;
+  const brandIdType = String(brandIdCol?.Type || "").toLowerCase();
+
+  if (brandIdType.includes("int")) {
+    await mariaPool.query(
+      "ALTER TABLE product_items ADD COLUMN IF NOT EXISTS brand_id_new VARCHAR(100) NULL",
+    );
+    await mariaPool.query(
+      "UPDATE product_items p LEFT JOIN brand_items b ON b.id = p.brand_id SET p.brand_id_new = COALESCE(b.brand, NULL)",
+    );
+    await mariaPool.query("ALTER TABLE product_items DROP COLUMN brand_id");
+    await mariaPool.query(
+      "ALTER TABLE product_items CHANGE COLUMN brand_id_new brand_id VARCHAR(100) NULL",
+    );
+  }
+
+  await mariaPool.query(
+    "UPDATE product_items p JOIN brand_items b ON p.brand_id = CAST(b.id AS CHAR) SET p.brand_id = b.brand WHERE p.brand_id REGEXP '^[0-9]+$'",
+  );
+  await mariaPool.query(
+    "UPDATE product_items p LEFT JOIN brand_items b ON b.name = p.name SET p.brand_id = b.brand WHERE (p.brand_id IS NULL OR p.brand_id = '') AND b.brand IS NOT NULL",
   );
 }
 
@@ -1599,6 +1692,7 @@ async function initSchema() {
   await ensureProductColumns();
   await ensureProductIdAsCode();
   await ensureBrandTable();
+  await ensureProductBrandIdAsCode();
   await mariaPool.query(
     "CREATE TABLE IF NOT EXISTS brand_models (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, brand_id INT UNSIGNED NOT NULL, model_name VARCHAR(255) NOT NULL, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, INDEX idx_brand_models_brand_id (brand_id))",
   );

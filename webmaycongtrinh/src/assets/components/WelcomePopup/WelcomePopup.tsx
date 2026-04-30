@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import "./WelcomePopup.css";
 
 const storageKey = "welcome-popup-last-seen";
-const hideDurationMs = 0 * 60 * 60 * 1000;
+const hideDurationMs = 1 * 60 * 60 * 1000;
 
 const sponsors = [
   "Máy Công Trình Đài Soạn",

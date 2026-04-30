@@ -7,15 +7,14 @@ import {
 } from "../lib/apiClient";
 import { warnMissingCollectionFields } from "../lib/schemaGuard";
 
-export type MenuItem = {
+export type MenuServiceItem = {
   id: number;
   name: string;
   link: string;
 };
 
-type MenuItemsContextValue = {
-  serviceItems: MenuItem[];
-  introItems: MenuItem[];
+type MenuServicesContextValue = {
+  serviceItems: MenuServiceItem[];
 };
 
 const SERVICES_ITEMS_PATH = getConfiguredApiPath(
@@ -23,12 +22,9 @@ const SERVICES_ITEMS_PATH = getConfiguredApiPath(
   "/api/services-items",
 );
 
-const INTRO_ITEMS_PATH = getConfiguredApiPath(
-  "VITE_API_INTRO_ITEMS_PATH",
-  "/api/intro-items",
-);
-
-function normalizeMenuItems(rows: Record<string, unknown>[]): MenuItem[] {
+function normalizeMenuItems(
+  rows: Record<string, unknown>[],
+): MenuServiceItem[] {
   return rows
     .map((row) => {
       const name = row.name;
@@ -63,80 +59,65 @@ function normalizeMenuItems(rows: Record<string, unknown>[]): MenuItem[] {
         link: trimmedLink,
       };
     })
-    .filter((item): item is MenuItem => item !== null)
+    .filter((item): item is MenuServiceItem => item !== null)
     .sort((a, b) => a.id - b.id);
 }
 
-const MenuItemsContext = createContext<MenuItemsContextValue | undefined>(
+const MenuServicesContext = createContext<MenuServicesContextValue | undefined>(
   undefined,
 );
 
-export function MenuItemsProvider({ children }: { children: ReactNode }) {
-  const [serviceItems, setServiceItems] = useState<MenuItem[]>([]);
-  const [introItems, setIntroItems] = useState<MenuItem[]>([]);
+export function MenuServicesProvider({ children }: { children: ReactNode }) {
+  const [serviceItems, setServiceItems] = useState<MenuServiceItem[]>([]);
 
   useEffect(() => {
     let isMounted = true;
 
-    async function loadMenuItems() {
+    async function loadServiceItems() {
       try {
-        const [servicePayload, introPayload] = await Promise.all([
-          requestJson(SERVICES_ITEMS_PATH),
-          requestJson(INTRO_ITEMS_PATH),
-        ]);
+        const payload = await requestJson(SERVICES_ITEMS_PATH);
 
         if (!isMounted) {
           return;
         }
 
-        const serviceRows = extractCollection(servicePayload);
-        const introRows = extractCollection(introPayload);
+        const rows = extractCollection(payload);
         warnMissingCollectionFields(
-          serviceRows,
+          rows,
           ["id", "name", "link"],
-          "MenuItems/Services",
+          "MenuServices",
         );
-        warnMissingCollectionFields(
-          introRows,
-          ["id", "name", "link"],
-          "MenuItems/Intro",
-        );
-        setServiceItems(normalizeMenuItems(serviceRows));
-        setIntroItems(normalizeMenuItems(introRows));
+        setServiceItems(normalizeMenuItems(rows));
       } catch {
         if (!isMounted) {
           return;
         }
 
         setServiceItems([]);
-        setIntroItems([]);
       }
     }
 
-    loadMenuItems();
+    loadServiceItems();
 
     return () => {
       isMounted = false;
     };
   }, []);
 
-  const value = useMemo(
-    () => ({ serviceItems, introItems }),
-    [serviceItems, introItems],
-  );
+  const value = useMemo(() => ({ serviceItems }), [serviceItems]);
 
   return (
-    <MenuItemsContext.Provider value={value}>
+    <MenuServicesContext.Provider value={value}>
       {children}
-    </MenuItemsContext.Provider>
+    </MenuServicesContext.Provider>
   );
 }
 
-export function useMenuItems() {
-  const context = useContext(MenuItemsContext);
+export function useMenuServices() {
+  const context = useContext(MenuServicesContext);
 
   if (!context) {
-    throw new Error("useMenuItems must be used within MenuItemsProvider");
+    throw new Error("useMenuServices must be used within MenuServicesProvider");
   }
 
   return context;

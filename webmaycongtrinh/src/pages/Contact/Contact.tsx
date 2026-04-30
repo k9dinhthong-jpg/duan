@@ -34,6 +34,18 @@ function sanitizeTel(phone?: string) {
   return (phone ?? "").replace(/\s+/g, "");
 }
 
+function resolveMapEmbedSrc(value?: string) {
+  const trimmed = value?.trim();
+  if (!trimmed) return "";
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  const srcMatch = trimmed.match(/src\s*=\s*["']([^"']+)["']/i);
+  return srcMatch?.[1]?.trim() ?? "";
+}
+
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
@@ -108,7 +120,12 @@ function Contact() {
   const phoneNumber = companyData.phone.trim();
   const emailAddress = companyData.email.trim();
   const officeAddress = companyData.address.trim();
+  const mapEmbed = companyData.mapEmbed?.trim() ?? "";
   const mapAddress = companyData.mapAddress.trim();
+  const mapSrc = useMemo(
+    () => resolveMapEmbedSrc(mapEmbed) || resolveMapEmbedSrc(mapAddress),
+    [mapEmbed, mapAddress],
+  );
 
   useEffect(() => {
     const requestedProduct = searchParams.get("product");
@@ -257,10 +274,10 @@ function Contact() {
   return (
     <section className="contact-page">
       <div className="contact-map">
-        {mapAddress ? (
+        {mapSrc ? (
           <iframe
             title="Bản đồ công ty"
-            src={mapAddress}
+            src={mapSrc}
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
             allowFullScreen

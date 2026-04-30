@@ -7,6 +7,28 @@ type LoginResult =
   | { ok: false; requiresTwoFactor: true; message: string }
   | { ok: false; message: string };
 
+type LoginApiResponse = {
+  token?: string;
+  access_token?: string;
+  accessToken?: string;
+  jwt?: string;
+  name?: string;
+  username?: string;
+  message?: string;
+  requiresTwoFactor?: boolean;
+};
+
+function pickLoginToken(data: LoginApiResponse): string {
+  return data.token ?? data.access_token ?? data.accessToken ?? data.jwt ?? "";
+}
+
+function pickDisplayName(
+  data: LoginApiResponse,
+  fallbackUsername: string,
+): string {
+  return data.name ?? data.username ?? fallbackUsername;
+}
+
 async function loginWithApi(
   username: string,
   password: string,
@@ -19,7 +41,7 @@ async function loginWithApi(
       body: JSON.stringify({ username, password, twoFactorCode }),
     });
 
-    const data = await res.json();
+    const data = (await res.json()) as LoginApiResponse;
 
     if (data.requiresTwoFactor === true) {
       return {
@@ -33,7 +55,19 @@ async function loginWithApi(
       return { ok: false, message: data.message ?? "Đăng nhập thất bại." };
     }
 
-    return { ok: true, token: data.token, name: data.name ?? username };
+    const token = pickLoginToken(data);
+    if (!token.trim()) {
+      return {
+        ok: false,
+        message: "Đăng nhập thành công nhưng không nhận được token hợp lệ.",
+      };
+    }
+
+    return {
+      ok: true,
+      token: token.trim(),
+      name: pickDisplayName(data, username),
+    };
   } catch {
     return { ok: false, message: "Không kết nối được đến máy chủ." };
   }

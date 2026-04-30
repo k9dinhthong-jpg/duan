@@ -44,6 +44,8 @@ const NEWS_API_CANDIDATES = [
   "/api/news/list",
 ].filter(Boolean);
 const IMAGE_UPLOAD_CANDIDATES = ["/api/upload/image", "/api/upload"];
+const WEBSITE_ORIGIN = "https://maycongtrinhnhapkhau.com.vn";
+const PRESET_CATEGORIES = ["Kiến thức", "Sản Phẩm", "Tin tức"];
 const PAGE_SIZE = 5;
 
 let resolvedNewsEndpoint: string | null = null;
@@ -53,7 +55,7 @@ const defaultForm: NewsForm = {
   title: "",
   content: "",
   image: "/img/FeaturedNews/Feature01.png",
-  category: "Tin Tức",
+  category: "Tin tức",
   author: "Admin",
   is_active: 1,
   published_at: new Date().toISOString().slice(0, 19).replace("T", " "),
@@ -76,6 +78,12 @@ function createSlug(value: string): string {
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-");
+}
+
+function toPreviewUrl(path: string): string {
+  if (!path) return "";
+  if (path.startsWith("http")) return path;
+  return `${WEBSITE_ORIGIN}${path}`;
 }
 
 function toDateTimeLocal(value: string): string {
@@ -419,6 +427,9 @@ function News() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [customCategories, setCustomCategories] = useState<string[]>([]);
+  const [newCategoryInput, setNewCategoryInput] = useState("");
+  const [showCategoryInput, setShowCategoryInput] = useState(false);
 
   const editingNews = useMemo(
     () => newsList.find((item) => item.id === editingId) ?? null,
@@ -642,288 +653,416 @@ function News() {
       <header className="topbar">
         <div>
           <p className="eyebrow">Nội dung</p>
-          <h1>Quản lý tin tức</h1>
+          <h1>Tin tức &amp; Bài viết</h1>
           <p className="news-api-note">
-            Đồng bộ API: {resolvedNewsEndpoint ?? NEWS_API_CANDIDATES[0]}
+            API: {resolvedNewsEndpoint ?? NEWS_API_CANDIDATES[0]}
           </p>
         </div>
       </header>
 
       <article className="panel news-panel">
-        <nav className="news-tabs" aria-label="Điều hướng quản lý tin tức">
+        <div className="panel-head">
+          <h2>Quản lý tin tức</h2>
+          <span className="panel-count">{newsList.length} bài</span>
+        </div>
+
+        <nav className="mode-tabs" aria-label="Điều hướng quản lý tin tức">
           <button
             type="button"
-            className={`news-tab ${activeTab === "list" ? "is-active" : ""}`}
+            className={`mode-tab ${activeTab === "list" ? "is-active" : ""}`}
             onClick={() => setActiveTab("list")}
           >
-            Danh sách tin
+            Danh sách bài
           </button>
           <button
             type="button"
-            className={`news-tab ${activeTab === "manage" ? "is-active" : ""}`}
+            className={`mode-tab ${activeTab === "manage" ? "is-active" : ""}`}
             onClick={() => setActiveTab("manage")}
           >
-            Thêm/Cập nhật tin
+            {editingId !== null ? "Chỉnh sửa bài" : "Thêm bài mới"}
           </button>
           <button
             type="button"
-            className="news-tab"
+            className="mode-tab"
             onClick={() => void refreshNews(selectedId ?? undefined)}
             disabled={isLoading}
           >
-            {isLoading ? "Đang tải..." : "Tải lại từ API"}
+            {isLoading ? "Đang tải..." : "Làm mới"}
           </button>
         </nav>
 
-        {activeTab === "list" ? (
-          <>
-            <div className="news-tools">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="news-search"
-                placeholder="Tìm theo tiêu đề, slug, chuyên mục..."
-              />
-              <p className="news-count">
-                {filteredNews.length} bản ghi, trang{" "}
-                {Math.min(currentPage, totalPages)}/{totalPages}
-              </p>
-            </div>
-
-            <div className="news-list-wrap">
-              {pagedNews.length === 0 ? (
-                <p className="news-empty">Không có bản ghi phù hợp.</p>
-              ) : (
-                <div className="news-table">
-                  <div className="news-row news-row--head">
-                    <span>ID</span>
-                    <span>Tiêu đề</span>
-                    <span>Chuyên mục</span>
-                    <span>Trạng thái</span>
-                    <span>Cập nhật</span>
-                    <span>Thao tác</span>
-                  </div>
-                  {pagedNews.map((item) => (
-                    <div
-                      key={item.id}
-                      className={`news-row ${item.id === selectedId ? "is-selected" : ""}`}
-                    >
-                      <span>#{item.id}</span>
-                      <span>{item.title}</span>
-                      <span>{item.category}</span>
-                      <span>{item.is_active === 1 ? "Hiển thị" : "Ẩn"}</span>
-                      <span>{item.updated_at}</span>
-                      <span className="news-row-actions">
-                        <button
-                          type="button"
-                          className="news-row-action"
-                          onClick={() => handleStartEditNews(item.id)}
-                          disabled={isSubmitting || isUploading}
-                        >
-                          Sửa
-                        </button>
-                        <button
-                          type="button"
-                          className="news-row-action news-row-action--danger"
-                          onClick={() =>
-                            void handleDeleteNews(item.id, item.title)
-                          }
-                          disabled={isSubmitting || isUploading}
-                        >
-                          Xóa
-                        </button>
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="news-pagination">
-              <button
-                type="button"
-                className="news-page-btn"
-                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                disabled={currentPage <= 1}
-              >
-                Trang trước
-              </button>
-              <button
-                type="button"
-                className="news-page-btn"
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                }
-                disabled={currentPage >= totalPages}
-              >
-                Trang sau
-              </button>
-            </div>
-          </>
-        ) : (
-          <form className="news-form" onSubmit={handleManageSubmit}>
-            <label className="field field-wide">
-              <span>Tiêu đề</span>
-              <input
-                type="text"
-                value={form.title}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    title: e.target.value,
-                    slug: prev.slug || createSlug(e.target.value),
-                  }))
-                }
-                placeholder="Nhập tiêu đề"
-                disabled={isSubmitting || isUploading}
-              />
-            </label>
-
-            <label className="field field-wide">
-              <span>Slug</span>
-              <input
-                type="text"
-                value={form.slug}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    slug: createSlug(e.target.value),
-                  }))
-                }
-                placeholder="may-xuc-chat-luong-cao"
-                disabled={isSubmitting || isUploading}
-              />
-            </label>
-
-            <label className="field field-wide">
-              <span>Nội dung</span>
-              <textarea
-                value={form.content}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, content: e.target.value }))
-                }
-                rows={5}
-                placeholder="Nội dung chi tiết tin tức"
-                disabled={isSubmitting || isUploading}
-              />
-            </label>
-
-            <label className="field field-wide">
-              <span>Ảnh</span>
-              <input
-                type="text"
-                value={form.image}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, image: e.target.value }))
-                }
-                placeholder="/img/FeaturedNews/Feature01.png"
-                disabled={isSubmitting || isUploading}
-              />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleUploadImage}
-                disabled={isSubmitting || isUploading}
-              />
-              <small className="news-upload-hint">
-                Upload file ảnh để tự động điền trường image.
-              </small>
-              {form.image ? (
-                <img
-                  src={form.image}
-                  alt="Preview"
-                  className="news-image-preview"
+        <div className="news-tab-content">
+          {activeTab === "list" ? (
+            <>
+              <div className="news-tools">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="news-search"
+                  placeholder="Tìm theo tiêu đề, slug, chuyên mục..."
                 />
-              ) : null}
-            </label>
+                <p className="news-count">
+                  {filteredNews.length} bài · trang{" "}
+                  {Math.min(currentPage, totalPages)}/{totalPages}
+                </p>
+              </div>
 
-            <label className="field">
-              <span>Chuyên mục</span>
-              <input
-                type="text"
-                value={form.category}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, category: e.target.value }))
-                }
-                placeholder="Tin Tức"
-                disabled={isSubmitting || isUploading}
-              />
-            </label>
+              <div className="news-table-wrap">
+                {pagedNews.length === 0 ? (
+                  <p className="news-empty">Không có bài viết phù hợp.</p>
+                ) : (
+                  <table className="news-table">
+                    <thead>
+                      <tr>
+                        <th className="col-id">ID</th>
+                        <th>Tiêu đề</th>
+                        <th>Chuyên mục</th>
+                        <th>Trạng thái</th>
+                        <th className="col-date">Cập nhật</th>
+                        <th>Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pagedNews.map((item) => (
+                        <tr
+                          key={item.id}
+                          className={
+                            item.id === selectedId ? "is-selected" : ""
+                          }
+                        >
+                          <td className="col-id">#{item.id}</td>
+                          <td className="col-title">{item.title}</td>
+                          <td>
+                            <span className="cat-badge">{item.category}</span>
+                          </td>
+                          <td>
+                            <span
+                              className={`status-pill ${item.is_active === 1 ? "status-pill--on" : "status-pill--off"}`}
+                            >
+                              {item.is_active === 1 ? "Hiển thị" : "Đã ẩn"}
+                            </span>
+                          </td>
+                          <td className="col-date">{item.updated_at}</td>
+                          <td>
+                            <div className="news-row-actions">
+                              <button
+                                type="button"
+                                className="row-action-btn"
+                                onClick={() => handleStartEditNews(item.id)}
+                                disabled={isSubmitting || isUploading}
+                              >
+                                Sửa
+                              </button>
+                              <button
+                                type="button"
+                                className="row-action-btn row-action-btn--danger"
+                                onClick={() =>
+                                  void handleDeleteNews(item.id, item.title)
+                                }
+                                disabled={isSubmitting || isUploading}
+                              >
+                                Xóa
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
 
-            <label className="field">
-              <span>Tác giả</span>
-              <input
-                type="text"
-                value={form.author}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, author: e.target.value }))
-                }
-                placeholder="Admin"
-                disabled={isSubmitting || isUploading}
-              />
-            </label>
-
-            <label className="field">
-              <span>Ngày xuất bản</span>
-              <input
-                type="datetime-local"
-                value={toDateTimeLocal(form.published_at)}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    published_at: fromDateTimeLocal(e.target.value),
-                  }))
-                }
-                disabled={isSubmitting || isUploading}
-              />
-            </label>
-
-            <label className="field">
-              <span>Trạng thái</span>
-              <button
-                type="button"
-                className={`switch ${form.is_active === 1 ? "is-on" : "is-off"}`}
-                onClick={() =>
-                  setForm((prev) => ({
-                    ...prev,
-                    is_active: prev.is_active === 1 ? 0 : 1,
-                  }))
-                }
-                aria-pressed={form.is_active === 1}
-                disabled={isSubmitting || isUploading}
-              >
-                <span className="switch-thumb" />
-                <span className="switch-label">
-                  {form.is_active === 1 ? "Hiển thị" : "Ẩn"}
-                </span>
-              </button>
-            </label>
-
-            <div className="news-actions field-wide">
-              {editingId === null ? (
+              <div className="news-pagination">
                 <button
                   type="button"
-                  className="ghost-btn"
-                  onClick={() => void handleCreateNews()}
-                  disabled={isSubmitting || isUploading}
+                  className="news-page-btn"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  disabled={currentPage <= 1}
                 >
-                  {isSubmitting ? "Đang xử lý..." : "Thêm mới"}
+                  Trang trước
                 </button>
-              ) : (
                 <button
-                  type="submit"
-                  className="primary-btn"
+                  type="button"
+                  className="news-page-btn"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
+                  disabled={currentPage >= totalPages}
+                >
+                  Trang sau
+                </button>
+              </div>
+            </>
+          ) : (
+            <form className="news-form" onSubmit={handleManageSubmit}>
+              <label className="field field-wide">
+                <span>Tiêu đề bài viết</span>
+                <input
+                  type="text"
+                  value={form.title}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      title: e.target.value,
+                      slug: prev.slug || createSlug(e.target.value),
+                    }))
+                  }
+                  placeholder="Nhập tiêu đề bài viết..."
+                  disabled={isSubmitting || isUploading}
+                />
+              </label>
+
+              <label className="field field-wide">
+                <span>Slug (URL)</span>
+                <input
+                  type="text"
+                  value={form.slug}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      slug: createSlug(e.target.value),
+                    }))
+                  }
+                  placeholder="may-xuc-chat-luong-cao"
+                  disabled={isSubmitting || isUploading}
+                />
+              </label>
+
+              <label className="field field-wide">
+                <span>Nội dung bài viết</span>
+                <textarea
+                  value={form.content}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, content: e.target.value }))
+                  }
+                  rows={6}
+                  placeholder="Nội dung chi tiết bài viết..."
+                  disabled={isSubmitting || isUploading}
+                />
+              </label>
+
+              <div className="field field-wide">
+                <span>Ảnh bài viết</span>
+                <div className="news-image-card">
+                  <div className="news-image-preview-wrap">
+                    {form.image ? (
+                      <img
+                        src={toPreviewUrl(form.image)}
+                        alt="Xem trước ảnh"
+                        className="news-image-preview"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.opacity = "0.25";
+                        }}
+                      />
+                    ) : (
+                      <span className="news-image-placeholder">
+                        Chưa có ảnh
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    type="text"
+                    value={form.image}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, image: e.target.value }))
+                    }
+                    placeholder="/img/FeaturedNews/Feature01.png"
+                    className="news-image-path"
+                    disabled={isSubmitting || isUploading}
+                  />
+                  <label
+                    className={`news-upload-btn${isSubmitting || isUploading ? " is-disabled" : ""}`}
+                  >
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleUploadImage}
+                      disabled={isSubmitting || isUploading}
+                      style={{ display: "none" }}
+                    />
+                    {isUploading ? "Đang tải lên..." : "↑ Tải ảnh lên máy chủ"}
+                  </label>
+                  <small className="news-upload-hint">
+                    ⓘ Ảnh lưu trên máy chủ tại <code>/img/FeaturedNews/</code>
+                  </small>
+                </div>
+              </div>
+
+              <div className="field">
+                <span>Chuyên mục</span>
+                <select
+                  value={showCategoryInput ? "__new__" : form.category}
+                  onChange={(e) => {
+                    if (e.target.value === "__new__") {
+                      setShowCategoryInput(true);
+                    } else {
+                      setForm((prev) => ({
+                        ...prev,
+                        category: e.target.value,
+                      }));
+                      setShowCategoryInput(false);
+                    }
+                  }}
                   disabled={isSubmitting || isUploading}
                 >
-                  {isSubmitting ? "Đang xử lý..." : "Cập nhật"}
-                </button>
-              )}
-            </div>
+                  {[...PRESET_CATEGORIES, ...customCategories].map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                  <option value="__new__">+ Thêm chuyên mục mới...</option>
+                </select>
+                {showCategoryInput && (
+                  <div className="news-cat-add-row">
+                    <input
+                      type="text"
+                      value={newCategoryInput}
+                      onChange={(e) => setNewCategoryInput(e.target.value)}
+                      placeholder="Tên chuyên mục mới..."
+                      disabled={isSubmitting}
+                    />
+                    <button
+                      type="button"
+                      className="news-cat-add-btn"
+                      onClick={() => {
+                        const name = newCategoryInput.trim();
+                        if (
+                          name &&
+                          ![...PRESET_CATEGORIES, ...customCategories].includes(
+                            name,
+                          )
+                        ) {
+                          setCustomCategories((prev) => [...prev, name]);
+                        }
+                        if (name) {
+                          setForm((prev) => ({ ...prev, category: name }));
+                        }
+                        setNewCategoryInput("");
+                        setShowCategoryInput(false);
+                      }}
+                      disabled={!newCategoryInput.trim()}
+                    >
+                      Thêm
+                    </button>
+                    <button
+                      type="button"
+                      className="news-cat-cancel-btn"
+                      onClick={() => {
+                        setShowCategoryInput(false);
+                        setNewCategoryInput("");
+                      }}
+                    >
+                      Hủy
+                    </button>
+                  </div>
+                )}
+              </div>
 
-            {message ? <p className="news-message">{message}</p> : null}
-          </form>
-        )}
+              <label className="field">
+                <span>Tác giả</span>
+                <input
+                  type="text"
+                  value={form.author}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, author: e.target.value }))
+                  }
+                  placeholder="Admin"
+                  disabled={isSubmitting || isUploading}
+                />
+              </label>
+
+              <label className="field">
+                <span>Ngày xuất bản</span>
+                <input
+                  type="datetime-local"
+                  value={toDateTimeLocal(form.published_at)}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      published_at: fromDateTimeLocal(e.target.value),
+                    }))
+                  }
+                  disabled={isSubmitting || isUploading}
+                />
+              </label>
+
+              <label className="field">
+                <span>Trạng thái hiển thị</span>
+                <button
+                  type="button"
+                  className={`switch ${form.is_active === 1 ? "is-on" : "is-off"}`}
+                  onClick={() =>
+                    setForm((prev) => ({
+                      ...prev,
+                      is_active: prev.is_active === 1 ? 0 : 1,
+                    }))
+                  }
+                  aria-pressed={form.is_active === 1}
+                  disabled={isSubmitting || isUploading}
+                >
+                  <span className="switch-thumb" />
+                  <span className="switch-label">
+                    {form.is_active === 1 ? "Hiển thị" : "Đã ẩn"}
+                  </span>
+                </button>
+              </label>
+
+              <div className="news-actions field-wide">
+                {editingId === null ? (
+                  <button
+                    type="button"
+                    className="ghost-btn"
+                    onClick={() => void handleCreateNews()}
+                    disabled={isSubmitting || isUploading}
+                  >
+                    {isSubmitting ? "Đang xử lý..." : "+ Thêm bài viết"}
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="submit"
+                      className="primary-btn"
+                      disabled={isSubmitting || isUploading}
+                    >
+                      {isSubmitting ? "Đang xử lý..." : "Lưu thay đổi"}
+                    </button>
+                    <button
+                      type="button"
+                      className="danger-btn"
+                      onClick={() => {
+                        setEditingId(null);
+                        setForm(defaultForm);
+                        setMessage("");
+                      }}
+                      disabled={isSubmitting || isUploading}
+                    >
+                      Hủy chỉnh sửa
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {message ? (
+                <p
+                  className={`news-status ${
+                    message.includes("thất bại") ||
+                    message.includes("Lỗi") ||
+                    message.includes("Vui lòng") ||
+                    message.includes("Thiếu") ||
+                    message.includes("Không")
+                      ? "news-status--error"
+                      : "news-status--ok"
+                  }`}
+                >
+                  {message}
+                </p>
+              ) : null}
+            </form>
+          )}
+        </div>
       </article>
     </section>
   );

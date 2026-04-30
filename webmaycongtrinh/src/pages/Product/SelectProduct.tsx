@@ -1,113 +1,111 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import "./SelectProduct.css";
-import { toPublicPath } from "../../utils/publicPath";
-import { useProductsHitachi } from "../../context/ProductsHitachiContext";
-import { useProductsKobelco } from "../../context/ProductsKobelcoContext";
-import { useProductsKomatsu } from "../../context/ProductsKomatsuContext";
-
-type ProductItem = {
-  id: string;
-  model?: string;
-  name?: string;
-  date?: string;
-  contact?: string;
-  price: string;
-  status?: string;
-  badge?: "Hot" | null;
-  image: string;
-  alt: string;
-};
-
-function getProductModel(product: ProductItem) {
-  return product.model ?? product.name ?? product.id;
-}
-
-function getProductDisplay(product: ProductItem) {
-  const model = getProductModel(product);
-  return product.date ? `${model} (${product.date})` : model;
-}
-
-function getProductImageAlt(product: ProductItem, brand: string): string {
-  const normalizedAlt = product.alt?.trim();
-  if (normalizedAlt) {
-    return normalizedAlt;
-  }
-
-  const display = getProductDisplay(product);
-  return `${display} - ${brand} nhập khẩu`;
-}
+import { useListAllProducts } from "../../context/ListAllProducts";
+import { useMenuBrand } from "../../context/MenuBrandContext";
+import {
+  toProductItem,
+  getProductTitle,
+  getProductImageSrc,
+  getProductModel,
+  getProductDisplay,
+  getProductImageAlt,
+} from "../../utils/productHelpers";
 
 function SelectProduct() {
-  const { brand = "hitachi" } = useParams<{ brand: string }>();
-  const {
-    hitachiGroup,
-    isLoading: isHitachiLoading,
-    error: hitachiError,
-  } = useProductsHitachi();
-  const {
-    kobelcoGroup,
-    isLoading: isKobelcoLoading,
-    error: kobelcoError,
-  } = useProductsKobelco();
-  const {
-    komatsuGroup,
-    isLoading: isKomatsuLoading,
-    error: komatsuError,
-  } = useProductsKomatsu();
+  const { brand: urlBrand = "hitachi" } = useParams<{ brand: string }>();
   const [searchParams] = useSearchParams();
+  const productId = searchParams.get("productId") ?? "";
+  const brandIdParam = searchParams.get("brandId") ?? "";
+
+  const { productItems: brandItems } = useMenuBrand();
+  const {
+    productItems: allProductItems,
+    isLoading,
+    error: loadError,
+  } = useListAllProducts();
   const [searchQuery, setSearchQuery] = useState(
     searchParams.get("query") ?? "",
   );
   const [selectedName, setSelectedName] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // 5 items per row × 2 rows
 
-  const brandState = useMemo(() => {
-    const normalizedBrand = brand.toLowerCase();
+  // Reset pagination when filters change
+  const prevFiltersRef = useRef({ searchQuery, selectedName, selectedStatus });
 
-    if (normalizedBrand === "hitachi") {
-      return {
-        group: hitachiGroup,
-        isLoading: isHitachiLoading,
-        loadError: hitachiError ?? "",
-      };
+  useEffect(() => {
+    const prev = prevFiltersRef.current;
+    if (
+      searchQuery !== prev.searchQuery ||
+      selectedName !== prev.selectedName ||
+      selectedStatus !== prev.selectedStatus
+    ) {
+      prevFiltersRef.current = { searchQuery, selectedName, selectedStatus };
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCurrentPage(1);
+    }
+  }, [searchQuery, selectedName, selectedStatus]);
+
+  const group = useMemo(() => {
+    // Prioritize brandId from query param
+    let targetBrandId = brandIdParam.trim().toUpperCase();
+
+    // If no brandId param, try URL brand slug as fallback by matching last segment of link
+    if (!targetBrandId && urlBrand) {
+      const fallbackBrand = brandItems.find((item) => {
+        const lastSegment =
+          item.link.replace(/\/$/, "").split("/").pop()?.toLowerCase() ?? "";
+        return lastSegment === urlBrand.toLowerCase();
+      });
+      if (fallbackBrand) {
+        targetBrandId = fallbackBrand.brand.trim().toUpperCase();
+      }
     }
 
-    if (normalizedBrand === "kobelco") {
-      return {
-        group: kobelcoGroup,
-        isLoading: isKobelcoLoading,
-        loadError: kobelcoError ?? "",
-      };
+    // Otherwise, try to extract from productId
+    if (!targetBrandId && productId) {
+      const selectedProduct = allProductItems
+        .map(toProductItem)
+        .find((p) => p.id === productId);
+      if (selectedProduct) {
+        targetBrandId = selectedProduct.brandId;
+      }
     }
 
-    if (normalizedBrand === "komatsu") {
-      return {
-        group: komatsuGroup,
-        isLoading: isKomatsuLoading,
-        loadError: komatsuError ?? "",
-      };
+    if (!targetBrandId) {
+      return null;
     }
+
+    const matchedBrand = brandItems.find(
+      (item) => item.brand.trim().toUpperCase() === targetBrandId,
+    );
+
+    if (!matchedBrand) {
+      return null;
+    }
+
+    const products = allProductItems
+      .map(toProductItem)
+      .filter(
+        (product) =>
+          product.id && product.isActive && product.brandId === targetBrandId,
+      );
 
     return {
-      group: null,
-      isLoading: false,
-      loadError: "Không thể tải dữ liệu sản phẩm theo thương hiệu này.",
+      id: String(matchedBrand.id),
+      brand: targetBrandId,
+      groupTitle: matchedBrand.name,
+      products,
     };
-  }, [
-    brand,
-    hitachiGroup,
-    hitachiError,
-    isHitachiLoading,
-    kobelcoGroup,
-    kobelcoError,
-    isKobelcoLoading,
-    komatsuGroup,
-    komatsuError,
-    isKomatsuLoading,
-  ]);
+  }, [allProductItems, brandItems, brandIdParam, productId, urlBrand]);
 
-  const { group, isLoading, loadError } = brandState;
+  const effectiveLoadError =
+    loadError ||
+    (!isLoading && !group
+      ? "Không thể tải dữ liệu sản phẩm theo thương hiệu này."
+      : "");
 
   const sortedProducts = useMemo(() => {
     return (group?.products ?? []).slice().sort((a, b) => {
@@ -116,6 +114,14 @@ function SelectProduct() {
 
       if (hotRankA !== hotRankB) {
         return hotRankA - hotRankB;
+      }
+
+      // Sort by created_at (newest first), fallback to id
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+
+      if (dateA !== dateB) {
+        return dateB - dateA; // Newest first
       }
 
       return b.id.localeCompare(a.id);
@@ -158,19 +164,35 @@ function SelectProduct() {
     });
   }, [searchQuery, selectedName, selectedStatus, sortedProducts]);
 
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const paginatedProducts = useMemo(() => {
+    const startIdx = (currentPage - 1) * itemsPerPage;
+    return filteredProducts.slice(startIdx, startIdx + itemsPerPage);
+  }, [filteredProducts, currentPage]);
+
+  const handlePageChange = useCallback(
+    (page: number) => {
+      if (page >= 1 && page <= totalPages) {
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    },
+    [totalPages],
+  );
+
   return (
     <section className="product-page">
       <h1 className="product-page__title">{group?.groupTitle}</h1>
 
       {isLoading && (
-        <p className="product-filter__empty" role="status">
+        <p className="product-filter__empty" role="status" aria-busy="true">
           Đang tải dữ liệu sản phẩm...
         </p>
       )}
 
-      {!isLoading && loadError && (
+      {!isLoading && effectiveLoadError && (
         <p className="product-filter__empty" role="alert">
-          {loadError}
+          {effectiveLoadError}
         </p>
       )}
 
@@ -226,7 +248,7 @@ function SelectProduct() {
       </div>
 
       <div className="product-page__grid">
-        {filteredProducts.map((product) => (
+        {paginatedProducts.map((product) => (
           <article className="product-card" key={product.id}>
             <div className="product-card__image-wrap">
               {product.badge === "Hot" && (
@@ -234,21 +256,38 @@ function SelectProduct() {
               )}
               <img
                 className="product-card__image"
-                src={toPublicPath(product.image)}
-                alt={getProductImageAlt(product, brand)}
+                src={getProductImageSrc(product.image)}
+                alt={getProductImageAlt(product, group?.brand ?? "")}
                 loading="lazy"
                 decoding="async"
               />
             </div>
 
             <div className="product-card__content">
-              <h2 className="product-card__name">
-                {getProductDisplay(product)}
-              </h2>
+              <h2 className="product-card__name">{getProductTitle(product)}</h2>
+
+              <p className="product-card__meta">
+                <span className="product-card__meta-label">Mã sản phẩm:</span>{" "}
+                {product.id}
+              </p>
+
+              {product.origin ? (
+                <p className="product-card__meta">
+                  <span className="product-card__meta-label">Xuất xứ:</span>{" "}
+                  {product.origin}
+                </p>
+              ) : null}
+
+              {product.vat ? (
+                <p className="product-card__meta">
+                  <span className="product-card__meta-label">VAT:</span>{" "}
+                  {product.vat}
+                </p>
+              ) : null}
 
               {product.status ? (
                 <p className="product-card__meta">
-                  <span className="product-card__meta-label">Tình trạng:</span>{" "}
+                  <span className="product-card__meta-label">Trạng thái:</span>{" "}
                   <span
                     className={`product-card__status ${
                       product.status === "Đã bán" ? "is-sold" : "is-available"
@@ -259,18 +298,11 @@ function SelectProduct() {
                 </p>
               ) : null}
 
-              {product.contact ? (
-                <p className="product-card__meta">
-                  <span className="product-card__meta-label">Liên hệ:</span>{" "}
-                  {product.contact}
-                </p>
-              ) : null}
-
               <Link
                 className="product-card__btn"
-                to={`/contact?product=${encodeURIComponent(`${product.id} - ${getProductDisplay(product)}`)}`}
+                to={`/product/${group?.brand?.toLowerCase()}?productId=${encodeURIComponent(product.id)}&brandId=${encodeURIComponent(product.brandId)}`}
               >
-                Liên hệ tư vấn
+                Xem chi tiết
               </Link>
             </div>
           </article>
@@ -282,6 +314,44 @@ function SelectProduct() {
           Không có sản phẩm phù hợp bộ lọc.
         </p>
       ) : null}
+
+      {totalPages > 1 && (
+        <nav className="product-pagination" aria-label="Phân trang">
+          <button
+            className="product-pagination__btn"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            aria-label="Trang trước"
+          >
+            ← Trước
+          </button>
+
+          <div className="product-pagination__pages">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                className={`product-pagination__page ${
+                  page === currentPage ? "is-active" : ""
+                }`}
+                onClick={() => handlePageChange(page)}
+                aria-label={`Trang ${page}`}
+                aria-current={page === currentPage ? "page" : undefined}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+
+          <button
+            className="product-pagination__btn"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            aria-label="Trang sau"
+          >
+            Sau →
+          </button>
+        </nav>
+      )}
     </section>
   );
 }

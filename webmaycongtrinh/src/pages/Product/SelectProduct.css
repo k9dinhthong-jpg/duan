@@ -27,8 +27,9 @@
 
 .product-page__grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: clamp(10px, 0.8vw, 14px);
+  margin-bottom: clamp(20px, 2vw, 30px);
 }
 
 .product-filter {
@@ -206,10 +207,91 @@
   .product-page__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .product-pagination {
+    gap: clamp(4px, 0.8vw, 8px);
+  }
+
+  .product-pagination__btn {
+    font-size: clamp(11px, 0.8vw, 12px);
+    padding: 0.4rem 0.6rem;
+  }
+
+  .product-pagination__page {
+    font-size: clamp(11px, 0.8vw, 12px);
+    width: 28px;
+    height: 28px;
+  }
 }
 
 @media (max-width: 560px) {
   .product-page__grid {
     grid-template-columns: 1fr;
   }
+}
+
+.product-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 1vw, 12px);
+  flex-wrap: wrap;
+  margin-top: clamp(20px, 2vw, 30px);
+  padding-top: clamp(16px, 1.5vw, 24px);
+  border-top: 1px solid #e5e9f3;
+}
+
+.product-pagination__btn {
+  border: 1px solid #ccd4e7;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #2f3a59;
+  font-size: clamp(12px, 0.9vw, 14px);
+  font-weight: 600;
+  padding: 0.5rem 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.product-pagination__btn:hover:not(:disabled) {
+  border-color: #7f8fc8;
+  background: #f5f8ff;
+  color: #6676b6;
+}
+
+.product-pagination__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.product-pagination__pages {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.product-pagination__page {
+  border: 1px solid #ccd4e7;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #2f3a59;
+  font-size: clamp(12px, 0.9vw, 14px);
+  font-weight: 600;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.product-pagination__page:hover {
+  border-color: #7f8fc8;
+  background: #f5f8ff;
+  color: #6676b6;
+}
+
+.product-pagination__page.is-active {
+  border-color: #6676b6;
+  background: linear-gradient(135deg, #6676b6, #4d5d9f);
+  color: #ffffff;
 }

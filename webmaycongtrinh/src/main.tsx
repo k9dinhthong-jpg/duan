@@ -10,32 +10,29 @@ import ErrorBoundary from "./assets/components/ErrorBoundary/ErrorBoundary";
 import { CompanyInfoProvider } from "./context/CompanyInfoContext";
 import { IntroCompanyProvider } from "./context/IntroCompany";
 import { NewsProvider } from "./context/NewsContext";
-import { ProductsHitachiProvider } from "./context/ProductsHitachiContext";
-import { ProductsKobelcoProvider } from "./context/ProductsKobelcoContext";
-import { ProductsKomatsuProvider } from "./context/ProductsKomatsuContext";
 import { MenuBrandProvider } from "./context/MenuBrandContext";
-import { MenuItemsProvider } from "./context/MenuItemsContext";
+import { MenuServicesProvider } from "./context/MenuServices";
+import { MenuIntroductionProvider } from "./context/MenuIntroduction";
+import { ListAllProductsProvider } from "./context/ListAllProducts";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ErrorBoundary>
       <CompanyInfoProvider>
         <IntroCompanyProvider>
-          <ProductsHitachiProvider>
-            <ProductsKobelcoProvider>
-              <ProductsKomatsuProvider>
-                <MenuBrandProvider>
-                  <MenuItemsProvider>
-                    <NewsProvider>
-                      <BrowserRouter>
-                        <App />
-                      </BrowserRouter>
-                    </NewsProvider>
-                  </MenuItemsProvider>
-                </MenuBrandProvider>
-              </ProductsKomatsuProvider>
-            </ProductsKobelcoProvider>
-          </ProductsHitachiProvider>
+          <MenuBrandProvider>
+            <ListAllProductsProvider>
+              <MenuServicesProvider>
+                <MenuIntroductionProvider>
+                  <NewsProvider>
+                    <BrowserRouter>
+                      <App />
+                    </BrowserRouter>
+                  </NewsProvider>
+                </MenuIntroductionProvider>
+              </MenuServicesProvider>
+            </ListAllProductsProvider>
+          </MenuBrandProvider>
         </IntroCompanyProvider>
       </CompanyInfoProvider>
     </ErrorBoundary>

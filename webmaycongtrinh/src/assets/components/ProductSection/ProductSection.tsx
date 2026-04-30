@@ -1,172 +1,219 @@
-import { useEffect, useMemo, useState } from "react";
 import { FaArrowRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import "./ProductSection.css";
+import { useMenuBrand } from "../../../context/MenuBrandContext";
+import {
+  type ProductItemRecord,
+  useListAllProducts,
+} from "../../../context/ListAllProducts";
 import { toPublicPath } from "../../../utils/publicPath";
-import { useProductsHitachi } from "../../../context/ProductsHitachiContext";
-import { useProductsKobelco } from "../../../context/ProductsKobelcoContext";
-import { useProductsKomatsu } from "../../../context/ProductsKomatsuContext";
+import "./ProductSection.css";
 
-type ProductItem = {
-  id: string;
-  model?: string;
-  name?: string;
-  date?: string;
-  contact?: string;
-  price: string;
-  status?: string;
-  badge?: "Hot" | null;
-  image: string;
-  alt: string;
-};
-
-function getProductModel(product: ProductItem) {
-  return product.model ?? product.name ?? product.id;
+function getProductBrandId(product: ProductItemRecord): string {
+  const raw = product.brand_id;
+  return typeof raw === "string" ? raw.trim().toUpperCase() : "";
 }
 
-function getProductDisplay(product: ProductItem) {
-  const model = getProductModel(product);
-  return product.date ? `${model} (${product.date})` : model;
-}
+function getProductTitle(product: ProductItemRecord): string {
+  const brandId =
+    typeof product.brand_id === "string" ? product.brand_id.trim() : "";
+  const model = typeof product.model === "string" ? product.model.trim() : "";
+  const name = typeof product.name === "string" ? product.name.trim() : "";
+  const id = typeof product.id === "string" ? product.id.trim() : "";
 
-function getProductImageAlt(product: ProductItem, groupTitle?: string) {
-  const normalizedAlt = product.alt?.trim();
-  if (normalizedAlt) {
-    return normalizedAlt;
+  const brandModelTitle = [brandId, model].filter(Boolean).join(" ");
+  if (brandModelTitle) {
+    return brandModelTitle;
   }
 
-  const display = getProductDisplay(product);
-  const normalizedGroup = groupTitle?.trim();
-
-  return normalizedGroup
-    ? `${display} - ${normalizedGroup} nhập khẩu`
-    : `${display} - máy công trình nhập khẩu`;
+  return name || id;
 }
 
-type ProductGroup = {
-  id?: string;
-  brand?: string;
-  groupTitle: string;
-  products: ProductItem[];
-};
+function getImageSrc(product: ProductItemRecord): string {
+  const image = typeof product.image === "string" ? product.image.trim() : "";
+  if (!image) {
+    return toPublicPath("img/Product/default.png");
+  }
 
-function getGroupBrandSlug(group: ProductGroup) {
-  const value = group.brand ?? group.id;
-  return value ? value.toLowerCase() : "";
+  return /^https?:\/\//i.test(image) ? image : toPublicPath(image);
 }
 
 function ProductSection() {
-  const { hitachiGroup } = useProductsHitachi();
-  const { kobelcoGroup } = useProductsKobelco();
-  const { komatsuGroup } = useProductsKomatsu();
-  const [itemsToShow, setItemsToShow] = useState(4);
-  const productGroups = useMemo<ProductGroup[]>(
-    () => [hitachiGroup, kobelcoGroup, komatsuGroup],
-    [hitachiGroup, kobelcoGroup, komatsuGroup],
-  );
+  const { productItems } = useMenuBrand();
+  const {
+    productItems: allProductItems,
+    isLoading,
+    error,
+  } = useListAllProducts();
 
-  const getItemsToShow = (width: number): number => {
-    if (width > 1200) return 4;
-    if (width >= 768) return 3;
-    return 2;
-  };
-
-  useEffect(() => {
-    function handleResize() {
-      setItemsToShow(getItemsToShow(window.innerWidth));
-    }
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
+  if (productItems.length === 0) {
+    return null;
+  }
 
   return (
-    <section className="product-section home-product-section">
-      {productGroups.map((group) => {
-        const groupBrandSlug = getGroupBrandSlug(group);
-        const visibleProducts = group.products
-          .filter(
-            (product) => product.badge === "Hot" && product.status !== "Đã bán",
-          )
-          .sort((a, b) => b.id.localeCompare(a.id))
-          .slice(0, itemsToShow);
+    <section className="product-section">
+      {isLoading ? (
+        <p className="product-section__state" role="status" aria-busy="true">
+          Đang tải danh sách sản phẩm...
+        </p>
+      ) : null}
 
-        if (visibleProducts.length === 0) {
-          return null;
-        }
+      {!isLoading && error ? (
+        <p className="product-section__state is-error">{error}</p>
+      ) : null}
 
-        return (
-          <article className="product-group" key={group.groupTitle}>
-            <header className="product-group-heading">
-              <h2 className="product-group-title">{group.groupTitle}</h2>
-              <p className="product-group-subtitle">SẢN PHẨM NỔI BẬT</p>
-            </header>
-            <div className="product-grid">
-              {visibleProducts.map((product) => (
-                <div className="product-card" key={product.id}>
-                  <div className="product-card-image-wrap">
-                    {product.badge === "Hot" && (
-                      <span className="product-card-badge">HOT</span>
-                    )}
-                    <img
-                      src={toPublicPath(product.image)}
-                      alt={getProductImageAlt(product, group.groupTitle)}
-                    />
-                  </div>
-                  <div className="product-card-content">
-                    <h3 className="product-card-title">
-                      {getProductDisplay(product)}
-                    </h3>
-                    {product.status ? (
-                      <p className="product-card-meta">
-                        <span className="product-card-meta-label">
-                          Tình trạng:
-                        </span>{" "}
-                        <span
-                          className={`product-card-status ${product.status === "Đã bán" ? "is-sold" : "is-available"}`}
-                        >
-                          {product.status}
-                        </span>
-                      </p>
-                    ) : null}
-                    {product.contact ? (
-                      <p className="product-card-meta">
-                        <span className="product-card-meta-label">
-                          Liên hệ:
-                        </span>{" "}
-                        {product.contact}
-                      </p>
-                    ) : null}
-                    <Link
-                      className="product-card-btn"
-                      to={
-                        groupBrandSlug
-                          ? `/product/${groupBrandSlug}?query=${encodeURIComponent(product.id)}`
-                          : "/product"
-                      }
-                    >
-                      Xem chi tiết
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <Link
-              className="product-group-btn"
-              to={groupBrandSlug ? `/product/${groupBrandSlug}` : "/product"}
-            >
-              <span className="product-group-btn-label">Xem tất cả</span>
-              <span className="product-group-btn-icon" aria-hidden="true">
-                <FaArrowRight />
-              </span>
-            </Link>
-          </article>
-        );
-      })}
+      <div className="product-section__groups">
+        {productItems.map((brand) => {
+          const brandSlug = brand.brand.trim().toLowerCase();
+          const normalizedBrand = brand.brand.trim().toUpperCase();
+          const productsByBrand = allProductItems
+            .filter((product) => {
+              const isActive = Number(product.is_active) !== 0;
+              const status =
+                typeof product.status === "string"
+                  ? product.status.trim().toLocaleLowerCase("vi-VN")
+                  : "";
+
+              const isNotSold = status !== "đã bán";
+              return (
+                isActive &&
+                isNotSold &&
+                getProductBrandId(product) === normalizedBrand
+              );
+            })
+            .sort((a, b) => {
+              const hasBadgeA =
+                typeof a.badge === "string" && a.badge.trim() !== "" ? 0 : 1;
+              const hasBadgeB =
+                typeof b.badge === "string" && b.badge.trim() !== "" ? 0 : 1;
+
+              if (hasBadgeA !== hasBadgeB) {
+                return hasBadgeA - hasBadgeB;
+              }
+
+              return String(b.id).localeCompare(String(a.id));
+            });
+
+          return (
+            <article key={brand.id} className="product-brand">
+              <h2 className="product-brand__title">{brand.name}</h2>
+              <p className="product-brand__subtitle">SẢN PHẨM NỔI BẬT</p>
+
+              <div className="product-brand__grid">
+                {productsByBrand.length === 0 ? (
+                  <p className="product-brand__empty">Chưa có sản phẩm</p>
+                ) : (
+                  <>
+                    {productsByBrand.slice(0, 4).map((product) => {
+                      const origin =
+                        typeof product.origin === "string"
+                          ? product.origin.trim()
+                          : "";
+                      const vat =
+                        typeof product.vat === "string"
+                          ? product.vat.trim()
+                          : "";
+                      const status =
+                        typeof product.status === "string"
+                          ? product.status.trim()
+                          : "";
+                      const productId =
+                        typeof product.id === "string" ? product.id.trim() : "";
+                      const imageAlt = `${getProductTitle(product)} - ${brand.brand}`;
+
+                      return (
+                        <article key={product.id} className="product-card">
+                          <div className="product-card__image-wrap">
+                            {product.badge === "Hot" ? (
+                              <span className="product-card__badge">HOT</span>
+                            ) : null}
+                            <img
+                              className="product-card__image"
+                              src={getImageSrc(product)}
+                              alt={imageAlt}
+                              loading="lazy"
+                              decoding="async"
+                            />
+                          </div>
+
+                          <div className="product-card__content">
+                            <h3 className="product-card__title">
+                              {getProductTitle(product)}
+                            </h3>
+
+                            {productId ? (
+                              <p className="product-card__meta">
+                                <span className="product-card__meta-label">
+                                  Mã sản phẩm:
+                                </span>{" "}
+                                {productId}
+                              </p>
+                            ) : null}
+
+                            {origin ? (
+                              <p className="product-card__meta">
+                                <span className="product-card__meta-label">
+                                  Xuất xứ:
+                                </span>{" "}
+                                {origin}
+                              </p>
+                            ) : null}
+
+                            {vat ? (
+                              <p className="product-card__meta">
+                                <span className="product-card__meta-label">
+                                  VAT:
+                                </span>{" "}
+                                {vat}
+                              </p>
+                            ) : null}
+
+                            {status ? (
+                              <p className="product-card__meta">
+                                <span className="product-card__meta-label">
+                                  Trạng thái:
+                                </span>{" "}
+                                <span
+                                  className={`product-card__status ${
+                                    status === "Đã bán"
+                                      ? "is-sold"
+                                      : "is-available"
+                                  }`}
+                                >
+                                  {status}
+                                </span>
+                              </p>
+                            ) : null}
+
+                            <Link
+                              className="product-card__btn"
+                              to={`/product/${brand.brand.toLowerCase()}?productId=${encodeURIComponent(product.id)}&brandId=${encodeURIComponent(brand.brand)}`}
+                            >
+                              Xem chi tiết
+                            </Link>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </>
+                )}
+              </div>
+
+              <Link
+                className="product-brand__all-btn"
+                to={`/product/${brandSlug}?brandId=${brand.brand}`}
+              >
+                <span className="product-brand__all-btn-label">Xem tất cả</span>
+                <span
+                  className="product-brand__all-btn-icon"
+                  aria-hidden="true"
+                >
+                  <FaArrowRight />
+                </span>
+              </Link>
+            </article>
+          );
+        })}
+      </div>
     </section>
   );
 }

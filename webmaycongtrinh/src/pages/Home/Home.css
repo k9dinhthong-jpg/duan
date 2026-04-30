@@ -17,6 +17,12 @@
   margin-inline: auto;
 }
 
+.home-page__products {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: unset;
+}
+
 .home-page__products .home-product-section {
   width: 100%;
   max-width: 100%;
@@ -34,8 +40,15 @@
   width: 100%;
 }
 
-.home-page__company .intro-company {
+.home-page__company {
   width: 100%;
+  max-width: 100%;
+  margin-inline: unset;
+}
+
+.home-page__company .intro-company {
+  width: 90%;
+  margin-inline: auto;
 }
 
 .home-page__company .intro-company-inner,
@@ -44,10 +57,17 @@
   max-width: 100%;
 }
 
-.home-page__news .featured-news {
+.home-page__news {
   width: 100%;
   max-width: 100%;
+  margin-inline: unset;
+}
+
+.home-page__news .featured-news {
+  width: 90%;
+  max-width: 100%;
   padding: 0;
+  margin-inline: auto;
 }
 
 .home-page__news .featured-news-grid {

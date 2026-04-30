@@ -11,7 +11,8 @@ import "./Header.css";
 import { toPublicPath } from "../../../utils/publicPath";
 import { useCompanyInfo } from "../../../context/CompanyInfoContext";
 import { useMenuBrand } from "../../../context/MenuBrandContext";
-import { useMenuItems } from "../../../context/MenuItemsContext";
+import { useMenuServices } from "../../../context/MenuServices";
+import { useMenuIntroduction } from "../../../context/MenuIntroduction";
 
 const text = {
   kicker: "MÁY CÔNG TRÌNH NHẬP KHẨU",
@@ -46,7 +47,8 @@ function Header() {
   const { companyInfo: companyData } = useCompanyInfo();
   const phoneNumber = companyData.phone.trim();
   const { productItems } = useMenuBrand();
-  const { serviceItems, introItems } = useMenuItems();
+  const { serviceItems } = useMenuServices();
+  const { introItems } = useMenuIntroduction();
 
   const [navTop, setNavTop] = useState(0);
   const bannerRef = useRef<HTMLElement | null>(null);

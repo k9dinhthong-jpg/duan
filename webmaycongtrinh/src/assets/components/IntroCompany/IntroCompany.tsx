@@ -70,29 +70,22 @@ function IntroCompany() {
     const sectionEl = sectionRef.current;
     if (!sectionEl) return;
 
-    const handleRevealOnScroll = () => {
-      if (window.scrollY <= 40) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsCentered(true);
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1 },
+    );
 
-      const rect = sectionEl.getBoundingClientRect();
-      const viewportHeight =
-        window.innerHeight || document.documentElement.clientHeight;
-      const isVisible =
-        rect.top <= viewportHeight * 0.85 &&
-        rect.bottom >= viewportHeight * 0.15;
-
-      if (isVisible) {
-        setIsCentered(true);
-        window.removeEventListener("scroll", handleRevealOnScroll);
-        window.removeEventListener("resize", handleRevealOnScroll);
-      }
-    };
-
-    window.addEventListener("scroll", handleRevealOnScroll, { passive: true });
-    window.addEventListener("resize", handleRevealOnScroll);
+    observer.observe(sectionEl);
 
     return () => {
-      window.removeEventListener("scroll", handleRevealOnScroll);
-      window.removeEventListener("resize", handleRevealOnScroll);
+      observer.disconnect();
     };
   }, []);
 
