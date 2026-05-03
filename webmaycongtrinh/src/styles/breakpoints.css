@@ -1,14 +1,8 @@
 /* Intentionally left blank: breakpoint rules will be rebuilt from scratch. */
 /* Laptop / desktop nhỏ */
-@media (max-width: 1200px) {
-}
 
 /* Tablet ngang */
-@media (max-width: 1024px) {
-}
 
 /* Tablet/mobile */
-@media (max-width: 768px) {
-}
 
 /* Desktop lớn hơn 1200px sẽ được tách riêng khi cần. */

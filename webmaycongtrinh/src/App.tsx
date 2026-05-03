@@ -13,6 +13,7 @@ const NewsDetail = lazy(() => import("./pages/News/NewsDetail"));
 const AboutUs = lazy(() => import("./pages/Introduct/AboutUs/AboutUs"));
 const MainProduct = lazy(() => import("./pages/Product/MainProduct"));
 const SelectProduct = lazy(() => import("./pages/Product/SelectProduct"));
+const ShowProduct = lazy(() => import("./pages/Product/ShowProduct"));
 const Warranty = lazy(() => import("./pages/Services/Warranty"));
 const Repair = lazy(() => import("./pages/Services/Repair"));
 const Rent = lazy(() => import("./pages/Services/Rent"));
@@ -29,41 +30,49 @@ const LoginAccount = lazy(
 function getSeoByPath(pathname: string) {
   if (pathname === "/" || pathname === "/home") {
     return {
-      title: "Máy Công Trình Nhập Khẩu Hitachi, Kobelco, Komatsu",
+      title: "Máy Công Trình Nhập Khẩu Hitachi, Kobelco, Komatsu chính hãng",
       description:
-        "Máy Công Trình Nhập Khẩu cung cấp máy xúc, máy đào Hitachi, Kobelco, Komatsu cùng dịch vụ bảo hành, sửa chữa, cho thuê tại Phú Thọ và toàn quốc.",
+        "Máy Công Trình Nhập Khẩu chuyên máy xúc, máy đào Hitachi, Kobelco, Komatsu chính hãng; hỗ trợ tư vấn, báo giá, bảo hành, sửa chữa và cho thuê toàn quốc.",
     };
   }
 
   if (pathname === "/product") {
     return {
-      title: "Sản phẩm máy công trình nhập khẩu",
+      title: "Sản phẩm máy công trình nhập khẩu - cập nhật mới mỗi ngày",
       description:
-        "Danh mục máy công trình nhập khẩu chính hãng, cập nhật liên tục theo thương hiệu Hitachi, Kobelco, Komatsu và tình trạng thực tế.",
+        "Danh mục máy xúc, máy đào nhập khẩu theo thương hiệu Hitachi, Kobelco, Komatsu; đầy đủ model, tình trạng, xuất xứ và thông tin liên hệ tư vấn nhanh.",
+    };
+  }
+
+  if (pathname === "/product/detail") {
+    return {
+      title: "Chi tiết sản phẩm máy công trình nhập khẩu",
+      description:
+        "Trang chi tiết sản phẩm máy công trình với model, năm đời, xuất xứ, giá tham khảo, trạng thái và kênh liên hệ tư vấn trực tiếp.",
     };
   }
 
   if (pathname.startsWith("/product/")) {
     return {
-      title: "Chi tiết máy công trình theo thương hiệu",
+      title: "Máy công trình theo thương hiệu Hitachi, Kobelco, Komatsu",
       description:
-        "Tra cứu nhanh máy xúc, máy đào theo thương hiệu, tình trạng, mức giá và thông số kỹ thuật phù hợp nhu cầu thi công.",
+        "Tra cứu máy xúc, máy đào theo thương hiệu, model, tình trạng, xuất xứ và thông tin tư vấn để chọn thiết bị phù hợp nhu cầu thi công thực tế.",
     };
   }
 
   if (pathname === "/news" || pathname.startsWith("/news/")) {
     return {
-      title: "Tin tức máy công trình",
+      title: "Tin tức máy công trình và kinh nghiệm vận hành",
       description:
-        "Tin tức thị trường máy công trình, kinh nghiệm vận hành, bảo dưỡng máy xúc và cập nhật sản phẩm mới từ Máy Công Trình Nhập Khẩu.",
+        "Cập nhật tin tức thị trường máy công trình, kinh nghiệm vận hành, bảo dưỡng máy xúc máy đào và thông tin sản phẩm mới.",
     };
   }
 
   if (pathname === "/about-us") {
     return {
-      title: "Giới thiệu Máy Công Trình Nhập Khẩu",
+      title: "Giới thiệu công ty Máy Công Trình Nhập Khẩu",
       description:
-        "Thông tin doanh nghiệp, năng lực vận hành, đội ngũ kỹ thuật và cam kết dịch vụ của Máy Công Trình Nhập Khẩu.",
+        "Tìm hiểu về Máy Công Trình Nhập Khẩu: năng lực cung ứng thiết bị, đội ngũ kỹ thuật, kinh nghiệm vận hành và cam kết hậu mãi.",
     };
   }
 
@@ -71,15 +80,15 @@ function getSeoByPath(pathname: string) {
     return {
       title: "Dịch vụ bảo hành, sửa chữa, cho thuê máy công trình",
       description:
-        "Dịch vụ bảo hành, sửa chữa và cho thuê máy công trình với hỗ trợ kỹ thuật nhanh, linh kiện phù hợp và quy trình rõ ràng.",
+        "Dịch vụ bảo hành, sửa chữa, cho thuê máy công trình với kỹ thuật viên giàu kinh nghiệm, quy trình minh bạch và hỗ trợ nhanh 24/7.",
     };
   }
 
   if (pathname === "/contact") {
     return {
-      title: "Liên hệ tư vấn máy công trình",
+      title: "Liên hệ tư vấn và báo giá máy công trình",
       description:
-        "Liên hệ Máy Công Trình Nhập Khẩu để được tư vấn nhanh về sản phẩm, báo giá máy xúc, dịch vụ sửa chữa và cho thuê máy công trình.",
+        "Liên hệ Máy Công Trình Nhập Khẩu để nhận tư vấn chọn máy, báo giá nhanh, hỗ trợ kỹ thuật và lịch hẹn xem máy trực tiếp.",
     };
   }
 
@@ -166,6 +175,8 @@ function App() {
             {/* Trang về chúng tôi */}
             <Route path="/product" element={<MainProduct />} />
             {/* Trang sản phẩm chung */}
+            <Route path="/product/detail" element={<ShowProduct />} />
+            {/* Trang chi tiết sản phẩm */}
             <Route path="/product/:brand" element={<SelectProduct />} />
             {/* Trang sản phẩm theo brand (Hitachi/Kobelco/Komatsu) */}
             <Route path="/services/warranty" element={<Warranty />} />

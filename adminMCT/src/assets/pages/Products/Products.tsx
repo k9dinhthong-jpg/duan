@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import type { FormEvent } from "react";
+import type { ChangeEvent, FormEvent } from "react";
+import Cropper from "react-easy-crop";
+import type { Area } from "react-easy-crop";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   useBrandContext,
   type BrandPayload,
@@ -9,10 +12,20 @@ import {
   type ProductItem,
   type ProductPayload,
 } from "../../Context/ProductContext/ProductContext.tsx";
+import {
+  buildSupabasePublicUrl,
+  supabaseClient,
+  SUPABASE_BUCKET,
+} from "../../lib/supabaseClient.ts";
 import "./Products.css";
 
-const PRODUCT_STATUS_OPTIONS = ["Còn hàng", "Đặt hàng", "Đã bán"] as const;
-const BADGE_OPTIONS = ["", "Hot"] as const;
+const PRODUCT_STATUS_OPTIONS = [
+  "Còn hàng",
+  "Đặt hàng",
+  "Đang về hàng",
+  "Đã bán",
+] as const;
+const BADGE_OPTIONS = ["", "Hot", "New"] as const;
 const ORIGIN_OPTIONS = ["China", "Japan", "Singgapore"] as const;
 const PRODUCT_PAGE_SIZE = 10;
 const PRODUCT_NAME_PRESETS = [
@@ -73,7 +86,70 @@ function buildProductLink(name: string): string {
 }
 
 function buildProductImageUrl(productCode: string): string {
-  return `https://ehsccjufbaehvfovguvm.supabase.co/storage/v1/object/public/${productCode}/title.jpg`;
+  const fromConfig = buildSupabasePublicUrl(`${productCode}/title.jpg`);
+  if (fromConfig) {
+    return fromConfig;
+  }
+
+  return `https://ehsccjufbaehvfovguvm.supabase.co/storage/v1/object/public/${SUPABASE_BUCKET}/${productCode}/title.jpg`;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function normalizeStorageFolder(value: string): string {
+  return value.trim().replace(/^\/+/, "").replace(/\/+$/, "");
+}
+
+function createImageElement(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Không tải được ảnh để crop."));
+    image.src = src;
+  });
+}
+
+async function cropImageToJpegBlob(
+  imageSrc: string,
+  cropArea: Area,
+): Promise<Blob> {
+  const image = await createImageElement(imageSrc);
+
+  const width = Math.max(1, Math.round(cropArea.width));
+  const height = Math.max(1, Math.round(cropArea.height));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const context = canvas.getContext("2d");
+  if (!context) {
+    throw new Error("Trình duyệt không hỗ trợ xử lý canvas.");
+  }
+
+  const sx = clamp(Math.round(cropArea.x), 0, Math.max(0, image.width - 1));
+  const sy = clamp(Math.round(cropArea.y), 0, Math.max(0, image.height - 1));
+  const sw = clamp(Math.round(cropArea.width), 1, image.width - sx);
+  const sh = clamp(Math.round(cropArea.height), 1, image.height - sy);
+
+  context.drawImage(image, sx, sy, sw, sh, 0, 0, width, height);
+
+  return await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          resolve(blob);
+          return;
+        }
+        reject(new Error("Không tạo được ảnh sau khi crop."));
+      },
+      "image/jpeg",
+      0.92,
+    );
+  });
 }
 
 function toLocalIsoDate(value: string): string {
@@ -107,10 +183,13 @@ const defaultProductForm: ProductPayload = {
   status: "",
   badge: "",
   image: "",
+  link_image_product: "",
   is_active: 1,
 };
 
 function Products() {
+  const navigate = useNavigate();
+  const { id: routeProductId } = useParams<{ id?: string }>();
   const {
     brandItems,
     isLoadingBrands,
@@ -160,6 +239,20 @@ function Products() {
   const [filterYear, setFilterYear] = useState("");
   const [createdProduct, setCreatedProduct] = useState<ProductItem | null>(
     null,
+  );
+  const [storageFolder, setStorageFolder] = useState("");
+  const [selectedImageSource, setSelectedImageSource] = useState("");
+  const [selectedImageName, setSelectedImageName] = useState("");
+  const [cropPosition, setCropPosition] = useState({ x: 0, y: 0 });
+  const [cropZoom, setCropZoom] = useState(1);
+  const [cropAreaPixels, setCropAreaPixels] = useState<Area | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const routeProduct = useMemo(
+    () =>
+      routeProductId
+        ? (productItems.find((item) => item.id === routeProductId) ?? null)
+        : null,
+    [productItems, routeProductId],
   );
 
   const selectedBrandId = useMemo(() => {
@@ -215,9 +308,15 @@ function Products() {
       : "__CUSTOM__"
     : "";
   const productImageDisplay = useMemo(
-    () => buildProductImageUrl(productCodeDisplay),
-    [productCodeDisplay],
+    () =>
+      productForm.image.trim() ||
+      buildProductImageUrl(editingProductId ?? productCodeDisplay),
+    [editingProductId, productCodeDisplay, productForm.image],
   );
+
+  useEffect(() => {
+    setStorageFolder(editingProductId ?? productCodeDisplay);
+  }, [editingProductId, productCodeDisplay]);
 
   useEffect(() => {
     if (selectedBrandId > 0) {
@@ -471,8 +570,10 @@ function Products() {
       status: target.status || "",
       badge: target.badge,
       image: target.image,
+      link_image_product: target.link_image_product,
       is_active: target.is_active,
     });
+    setStorageFolder(target.id);
   }
 
   function resetBrandForm() {
@@ -486,7 +587,109 @@ function Products() {
     setCustomNameInput("");
     setNewModelInput("");
     setIsAddingModel(false);
+    setStorageFolder("");
+    setSelectedImageSource("");
+    setSelectedImageName("");
+    setCropAreaPixels(null);
+    setCropZoom(1);
+    setCropPosition({ x: 0, y: 0 });
     setProductForm(defaultProductForm);
+  }
+
+  async function handleChooseImageForCrop(
+    event: ChangeEvent<HTMLInputElement>,
+  ) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setMessage("Vui lòng chọn file ảnh hợp lệ.");
+      return;
+    }
+
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(new Error("Không đọc được file ảnh."));
+      reader.readAsDataURL(file);
+    }).catch(() => "");
+
+    if (!dataUrl) {
+      setMessage("Không đọc được file ảnh đã chọn.");
+      return;
+    }
+
+    setSelectedImageSource(dataUrl);
+    setSelectedImageName(file.name);
+    setCropPosition({ x: 0, y: 0 });
+    setCropZoom(1);
+    setCropAreaPixels(null);
+  }
+
+  async function handleCropAndUploadImage() {
+    const folder = normalizeStorageFolder(storageFolder || productCodeDisplay);
+    if (!folder) {
+      setMessage("Vui lòng nhập thư mục Supabase để lưu ảnh.");
+      return;
+    }
+
+    if (!supabaseClient) {
+      setMessage(
+        "Thiếu cấu hình Supabase. Hãy thêm VITE_SUPABASE_URL và VITE_SUPABASE_ANON_KEY trong file .env.",
+      );
+      return;
+    }
+
+    if (!selectedImageSource || !cropAreaPixels) {
+      setMessage("Vui lòng chọn ảnh và crop trước khi upload.");
+      return;
+    }
+
+    setIsUploadingImage(true);
+    try {
+      const croppedBlob = await cropImageToJpegBlob(
+        selectedImageSource,
+        cropAreaPixels,
+      );
+      const fileBaseName = "title";
+      const uploadPath = `${folder}/${fileBaseName}.jpg`;
+
+      const uploadResult = await supabaseClient.storage
+        .from(SUPABASE_BUCKET)
+        .upload(uploadPath, croppedBlob, {
+          contentType: "image/jpeg",
+          cacheControl: "3600",
+          upsert: true,
+        });
+
+      if (uploadResult.error) {
+        setMessage(`Upload ảnh thất bại: ${uploadResult.error.message}`);
+        setIsUploadingImage(false);
+        return;
+      }
+
+      const uploadedPublicUrl =
+        buildSupabasePublicUrl(uploadPath) || buildProductImageUrl(folder);
+
+      setProductForm((prev) => ({
+        ...prev,
+        image: uploadedPublicUrl,
+      }));
+      setSelectedImageSource("");
+      setSelectedImageName("");
+      setCropAreaPixels(null);
+      setMessage(
+        `Đã crop và lưu ảnh "${fileBaseName}.jpg" vào thư mục "${folder}" trên Supabase.`,
+      );
+    } catch {
+      setMessage("Crop hoặc upload ảnh thất bại. Vui lòng thử lại.");
+    }
+
+    setIsUploadingImage(false);
   }
 
   async function handleSubmitBrand(event: FormEvent<HTMLFormElement>) {
@@ -654,7 +857,9 @@ function Products() {
 
     setIsSubmitting(true);
 
-    const productImage = buildProductImageUrl(productCodeDisplay);
+    const productImage =
+      productForm.image.trim() ||
+      buildProductImageUrl(editingProductId ?? productCodeDisplay);
 
     const result =
       editingProductId === null
@@ -672,6 +877,7 @@ function Products() {
             status: productForm.status.trim(),
             badge: productForm.badge.trim(),
             image: productImage,
+            link_image_product: productForm.link_image_product.trim(),
             is_active: productForm.is_active,
           })
         : await updateProductItem(editingProductId, {
@@ -688,6 +894,7 @@ function Products() {
             status: productForm.status.trim(),
             badge: productForm.badge.trim(),
             image: productImage,
+            link_image_product: productForm.link_image_product.trim(),
             is_active: productForm.is_active,
           });
 
@@ -749,6 +956,7 @@ function Products() {
       status: target.status,
       badge: target.badge,
       image: target.image,
+      link_image_product: target.link_image_product,
       is_active: target.is_active === 1 ? 0 : 1,
     });
 
@@ -803,6 +1011,213 @@ function Products() {
 
   async function handleRefreshAllData() {
     await Promise.all([refreshBrandData(), refreshProductData()]);
+  }
+
+  if (routeProductId) {
+    return (
+      <section className="products-page product-detail-page">
+        <header className="topbar">
+          <div>
+            <p className="eyebrow">Chi tiết sản phẩm</p>
+            <h1>
+              {routeProduct ? routeProduct.name : "Không tìm thấy sản phẩm"}
+            </h1>
+            {routeProduct ? (
+              <p className="products-note">
+                Mã SP: {routeProduct.id} · Thương hiệu:{" "}
+                {getBrandName(routeProduct.brand_id)}
+              </p>
+            ) : (
+              <p className="products-note">
+                Sản phẩm có thể đã bị xóa hoặc mã không còn hợp lệ.
+              </p>
+            )}
+          </div>
+          <div className="product-detail-head-actions">
+            <button
+              type="button"
+              className="ghost-btn"
+              onClick={() => navigate("/products")}
+            >
+              Quay lại danh sách
+            </button>
+            {routeProduct ? (
+              <button
+                type="button"
+                className="primary-btn"
+                onClick={() => {
+                  handleStartEditProduct(routeProduct.id);
+                  navigate("/products");
+                }}
+                disabled={isSubmitting}
+              >
+                Sửa sản phẩm
+              </button>
+            ) : null}
+          </div>
+        </header>
+
+        {routeProduct ? (
+          <div className="product-detail-layout">
+            <article className="products-panel product-detail-hero">
+              <div className="product-detail-image-wrap">
+                {routeProduct.image ? (
+                  <img
+                    src={routeProduct.image}
+                    alt={routeProduct.name}
+                    className="product-detail-image"
+                  />
+                ) : (
+                  <div className="product-detail-image product-detail-image--empty">
+                    Chưa có ảnh title
+                  </div>
+                )}
+              </div>
+              <div className="product-detail-summary">
+                <div className="product-detail-badges">
+                  <span className={getStatusPillClass(routeProduct.status)}>
+                    {routeProduct.status || "Chưa cập nhật"}
+                  </span>
+                  <span
+                    className={
+                      routeProduct.is_active === 1
+                        ? "status-pill status-pill--available"
+                        : "status-pill status-pill--sold"
+                    }
+                  >
+                    {routeProduct.is_active === 1 ? "Đang hiển thị" : "Đã ẩn"}
+                  </span>
+                  {routeProduct.badge ? (
+                    <span className="badge-tag">{routeProduct.badge}</span>
+                  ) : null}
+                </div>
+
+                <div className="product-detail-title-block">
+                  <h2>{routeProduct.name}</h2>
+                  <p>
+                    {getBrandName(routeProduct.brand_id)} (
+                    {getBrandCode(routeProduct.brand_id)})
+                  </p>
+                </div>
+
+                <dl className="product-detail-meta-grid">
+                  <div>
+                    <dt>Mã sản phẩm</dt>
+                    <dd>{routeProduct.id}</dd>
+                  </div>
+                  <div>
+                    <dt>Đơn vị sở hữu</dt>
+                    <dd>{routeProduct.owner || "-"}</dd>
+                  </div>
+                  <div>
+                    <dt>Dòng máy</dt>
+                    <dd>{routeProduct.model || "-"}</dd>
+                  </div>
+                  <div>
+                    <dt>Năm sản xuất</dt>
+                    <dd>{routeProduct.date || "-"}</dd>
+                  </div>
+                  <div>
+                    <dt>Xuất xứ</dt>
+                    <dd>{routeProduct.origin || "-"}</dd>
+                  </div>
+                  <div>
+                    <dt>Liên hệ</dt>
+                    <dd>{routeProduct.contact || "-"}</dd>
+                  </div>
+                </dl>
+              </div>
+            </article>
+
+            <div className="product-detail-grid">
+              <article className="products-panel product-detail-card">
+                <div className="panel-head">
+                  <h2>Thông tin chính</h2>
+                </div>
+                <dl className="product-detail-fields">
+                  <div>
+                    <dt>VAT</dt>
+                    <dd>{routeProduct.vat || "-"}</dd>
+                  </div>
+                  <div>
+                    <dt>Ngày đăng</dt>
+                    <dd>{routeProduct.created_at || "-"}</dd>
+                  </div>
+                  <div>
+                    <dt>Link sản phẩm</dt>
+                    <dd>
+                      {routeProduct.link ? (
+                        <a
+                          href={routeProduct.link}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {routeProduct.link}
+                        </a>
+                      ) : (
+                        "-"
+                      )}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Ảnh title</dt>
+                    <dd>
+                      {routeProduct.image ? (
+                        <a
+                          href={routeProduct.image}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {routeProduct.image}
+                        </a>
+                      ) : (
+                        "-"
+                      )}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Link ảnh thực tế</dt>
+                    <dd>
+                      {routeProduct.link_image_product ? (
+                        <a
+                          href={routeProduct.link_image_product}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {routeProduct.link_image_product}
+                        </a>
+                      ) : (
+                        "-"
+                      )}
+                    </dd>
+                  </div>
+                </dl>
+              </article>
+
+              <article className="products-panel product-detail-card">
+                <div className="panel-head">
+                  <h2>Ghi chú</h2>
+                </div>
+                <div className="product-detail-note">
+                  {routeProduct.note
+                    ? routeProduct.note
+                    : "Chưa có ghi chú cho sản phẩm này."}
+                </div>
+              </article>
+            </div>
+          </div>
+        ) : (
+          <article className="products-panel product-detail-empty-state">
+            <div className="panel-head">
+              <h2>Không có dữ liệu</h2>
+            </div>
+            <p className="products-empty">
+              Không tìm thấy sản phẩm theo mã trên URL.
+            </p>
+          </article>
+        )}
+      </section>
+    );
   }
 
   return (
@@ -1405,6 +1820,47 @@ function Products() {
               />
             </label>
 
+            <div className="field field-wide">
+              <span>Chọn ảnh từ máy tính + Crop + Lưu Supabase</span>
+              <div className="image-upload-tools">
+                <input
+                  type="text"
+                  value={storageFolder}
+                  onChange={(e) => setStorageFolder(e.target.value)}
+                  placeholder="Thư mục đã có trên Supabase, ví dụ: DS0205"
+                  disabled={isSubmitting || isUploadingImage}
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    void handleChooseImageForCrop(e);
+                  }}
+                  disabled={isSubmitting || isUploadingImage}
+                />
+              </div>
+              <p className="field-note">
+                Ảnh sau khi crop sẽ upload vào bucket {SUPABASE_BUCKET} theo thư
+                mục bạn nhập, với tên mặc định là title.jpg.
+              </p>
+            </div>
+
+            <label className="field field-wide">
+              <span>Link ảnh sản phẩm thực tế</span>
+              <input
+                type="url"
+                value={productForm.link_image_product}
+                onChange={(e) =>
+                  setProductForm((prev) => ({
+                    ...prev,
+                    link_image_product: e.target.value,
+                  }))
+                }
+                placeholder="https://..."
+                disabled={isSubmitting}
+              />
+            </label>
+
             <label className="field">
               <span>Hiển thị</span>
               <button
@@ -1614,12 +2070,9 @@ function Products() {
                   <th>Mã SP</th>
                   <th>Thương hiệu</th>
                   <th>Tên sản phẩm</th>
+                  <th>Ngày đăng</th>
                   <th>Đơn vị</th>
                   <th>Dòng máy</th>
-                  <th>Năm SX</th>
-                  <th>Liên hệ</th>
-                  <th>Ghi chú</th>
-                  <th>VAT</th>
                   <th>Xuất xứ</th>
                   <th>Tình trạng</th>
                   <th>Nhãn</th>
@@ -1636,13 +2089,20 @@ function Products() {
                     </td>
                     <td className="col-id">{item.id}</td>
                     <td>{getBrandCode(item.brand_id)}</td>
-                    <td className="col-name">{item.name}</td>
+                    <td className="col-name">
+                      <a
+                        href={`/products/${item.id}`}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          navigate(`/products/${item.id}`);
+                        }}
+                      >
+                        {item.name}
+                      </a>
+                    </td>
+                    <td>{toLocalIsoDate(item.created_at || "") || "-"}</td>
                     <td>{item.owner || "-"}</td>
                     <td>{item.model || "-"}</td>
-                    <td>{item.date}</td>
-                    <td>{item.contact}</td>
-                    <td>{item.note || "-"}</td>
-                    <td>{item.vat || "-"}</td>
                     <td>{item.origin || "-"}</td>
                     <td>
                       <span className={getStatusPillClass(item.status)}>
@@ -1694,6 +2154,14 @@ function Products() {
                       <button
                         type="button"
                         className="row-action-btn"
+                        onClick={() => navigate(`/products/${item.id}`)}
+                        disabled={isSubmitting}
+                      >
+                        Xem chi tiết
+                      </button>
+                      <button
+                        type="button"
+                        className="row-action-btn"
                         onClick={() => void handleToggleProductActive(item.id)}
                         disabled={isSubmitting}
                       >
@@ -1722,7 +2190,7 @@ function Products() {
                 ))}
                 {pagedProductItems.length === 0 ? (
                   <tr>
-                    <td colSpan={16} className="products-empty">
+                    <td colSpan={13} className="products-empty">
                       Không có sản phẩm phù hợp bộ lọc.
                     </td>
                   </tr>
@@ -1874,6 +2342,82 @@ function Products() {
                 onClick={() => setCreatedProduct(null)}
               >
                 Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {selectedImageSource ? (
+        <div
+          className="crop-modal-overlay"
+          onClick={() => {
+            if (isUploadingImage) return;
+            setSelectedImageSource("");
+            setSelectedImageName("");
+            setCropAreaPixels(null);
+          }}
+        >
+          <div
+            className="crop-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="crop-modal__header">
+              <h3>Crop ảnh trước khi lưu</h3>
+              <p>{selectedImageName || "Ảnh mới"}</p>
+            </div>
+
+            <div className="cropper-wrap">
+              <Cropper
+                image={selectedImageSource}
+                crop={cropPosition}
+                zoom={cropZoom}
+                aspect={4 / 3}
+                onCropChange={setCropPosition}
+                onZoomChange={setCropZoom}
+                onCropComplete={(_, croppedAreaPixelsValue) => {
+                  setCropAreaPixels(croppedAreaPixelsValue);
+                }}
+              />
+            </div>
+
+            <div className="crop-controls">
+              <label>
+                Zoom
+                <input
+                  type="range"
+                  min={1}
+                  max={3}
+                  step={0.01}
+                  value={cropZoom}
+                  onChange={(event) => setCropZoom(Number(event.target.value))}
+                  disabled={isUploadingImage}
+                />
+              </label>
+            </div>
+
+            <div className="crop-actions">
+              <button
+                type="button"
+                className="ghost-btn"
+                onClick={() => {
+                  setSelectedImageSource("");
+                  setSelectedImageName("");
+                  setCropAreaPixels(null);
+                }}
+                disabled={isUploadingImage}
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                className="primary-btn"
+                onClick={() => {
+                  void handleCropAndUploadImage();
+                }}
+                disabled={isUploadingImage}
+              >
+                {isUploadingImage ? "Đang upload..." : "Crop và lưu ảnh"}
               </button>
             </div>
           </div>

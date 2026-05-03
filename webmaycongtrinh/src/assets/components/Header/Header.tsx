@@ -5,7 +5,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { FaBars, FaCaretDown, FaSearch, FaTimes } from "react-icons/fa";
+import { FaBars, FaCaretDown, FaTimes } from "react-icons/fa";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import "./Header.css";
 import { toPublicPath } from "../../../utils/publicPath";
@@ -28,7 +28,12 @@ const text = {
   news: "TIN TỨC",
   contact: "LIÊN HỆ",
   login: "ĐĂNG NHẬP",
-  searchPlaceholder: "Tìm kiếm...",
+  search: "TÌM KIẾM",
+  searchLabel: "Tìm kiếm sản phẩm",
+  searchPlaceholder: "Nhập mã sản phẩm cần tìm...",
+  searchInstruction: "Vui lòng nhập mã sản phẩm cần tìm",
+  searchBtn: "Tìm kiếm",
+  searchClose: "Đóng",
   searchAria: "Tìm kiếm",
 };
 
@@ -53,8 +58,10 @@ function Header() {
   const [navTop, setNavTop] = useState(0);
   const bannerRef = useRef<HTMLElement | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isCompactNav, setIsCompactNav] = useState(
-    typeof window !== "undefined" ? window.innerWidth <= 1024 : false,
+    typeof window !== "undefined" ? window.innerWidth <= 991 : false,
   );
   const [openSubmenus, setOpenSubmenus] = useState({
     product: false,
@@ -122,10 +129,10 @@ function Header() {
 
   useEffect(() => {
     function handleResize() {
-      const compact = window.innerWidth <= 1024;
+      const compact = window.innerWidth <= 991;
       setIsCompactNav(compact);
 
-      if (window.innerWidth > 1024) {
+      if (window.innerWidth > 991) {
         setIsMenuOpen(false);
         setOpenSubmenus({ product: false, services: false, intro: false });
       }
@@ -168,6 +175,21 @@ function Header() {
     setIsMenuOpen(false);
   }
 
+  function openSearch() {
+    setIsSearchOpen(true);
+    setSearchQuery("");
+  }
+
+  function closeSearch() {
+    setIsSearchOpen(false);
+  }
+
+  function handleSearchSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    // TODO: xử lý tìm kiếm với searchQuery
+    closeSearch();
+  }
+
   function handleMobileLogoClick(event: MouseEvent<HTMLAnchorElement>) {
     if (!isCompactNav) {
       return;
@@ -177,6 +199,8 @@ function Header() {
     closeMenuPanel();
     navigate("/home");
   }
+
+  const navRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     function handleEscClose(event: KeyboardEvent) {
@@ -190,6 +214,21 @@ function Header() {
       window.removeEventListener("keydown", handleEscClose);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    function handleClickOutside(event: globalThis.MouseEvent) {
+      if (navRef.current && !navRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isMenuOpen]);
 
   return (
     <>
@@ -213,32 +252,46 @@ function Header() {
         ) : null}
       </div>
       <nav
+        ref={navRef}
         className="site-nav"
         style={{ top: `${navTop}px` }}
         aria-label={text.mainNavAria}
       >
-        <button
-          className="nav-toggle"
-          type="button"
-          aria-label={isMenuOpen ? text.closeMenu : text.openMenu}
-          aria-expanded={isMenuOpen}
-          aria-controls="site-nav-menu"
-          onClick={handleMenuToggle}
-        >
-          {isMenuOpen ? <FaTimes /> : <FaBars />}
-        </button>
+        <div className="nav-container">
+          <button
+            className="nav-toggle"
+            type="button"
+            aria-label={isMenuOpen ? text.closeMenu : text.openMenu}
+            aria-expanded={isMenuOpen}
+            aria-controls="site-nav-menu"
+            onClick={handleMenuToggle}
+          >
+            {isMenuOpen ? <FaTimes /> : <FaBars />}
+          </button>
 
-        <Link
-          className="nav-mobile-logo"
-          to="/home"
-          aria-label={text.homeAria}
-          onClick={handleMobileLogoClick}
-        >
-          <img
-            src={toPublicPath("img/Logo/Logo.png")}
-            alt="Logo Máy Công Trình Nhập Khẩu"
-          />
-        </Link>
+          <Link
+            className="nav-mobile-logo"
+            to="/home"
+            aria-label={text.homeAria}
+            onClick={handleMobileLogoClick}
+          >
+            <img
+              src={toPublicPath("img/Logo/Logo.png")}
+              alt="Logo Máy Công Trình Nhập Khẩu"
+            />
+          </Link>
+
+          <div className="nav-right-actions">
+            <button
+              type="button"
+              className="nav-search-btn nav-search-compact"
+              onClick={openSearch}
+              aria-label={text.searchLabel}
+            >
+              {text.search}
+            </button>
+          </div>
+        </div>
 
         <ul
           className={`nav-menu ${isMenuOpen ? "is-open" : ""}`}
@@ -267,7 +320,14 @@ function Header() {
               <Link
                 className="product-menu-link"
                 to="/product"
-                onClick={closeMenuPanel}
+                onClick={(e) => {
+                  if (isCompactNav) {
+                    e.preventDefault();
+                    toggleSubmenu("product");
+                  } else {
+                    closeMenuPanel();
+                  }
+                }}
               >
                 {text.product} <FaCaretDown />
               </Link>
@@ -282,6 +342,11 @@ function Header() {
               </button>
             </div>
             <ul className="product-menu-item">
+              <li className={pathname === "/product" ? "is-active" : ""}>
+                <Link to="/product" onClick={closeMenuPanel}>
+                  TẤT CẢ SẢN PHẨM
+                </Link>
+              </li>
               {productItems.map((item) => (
                 <li
                   key={item.id}
@@ -303,7 +368,14 @@ function Header() {
               <Link
                 className="product-menu-link"
                 to="/services/warranty"
-                onClick={closeMenuPanel}
+                onClick={(e) => {
+                  if (isCompactNav) {
+                    e.preventDefault();
+                    toggleSubmenu("services");
+                  } else {
+                    closeMenuPanel();
+                  }
+                }}
               >
                 {text.services} <FaCaretDown />
               </Link>
@@ -339,7 +411,14 @@ function Header() {
               <Link
                 className="product-menu-link"
                 to="/about-us"
-                onClick={closeMenuPanel}
+                onClick={(e) => {
+                  if (isCompactNav) {
+                    e.preventDefault();
+                    toggleSubmenu("intro");
+                  } else {
+                    closeMenuPanel();
+                  }
+                }}
               >
                 {text.intro} <FaCaretDown />
               </Link>
@@ -376,42 +455,56 @@ function Header() {
               {text.contact}
             </Link>
           </li>
-        </ul>
-
-        <div className="nav-right-actions">
-          <div className="nav-search-mobile">
-            <form
-              className="search-box"
-              role="search"
-              onSubmit={(e) => e.preventDefault()}
+          <li className="nav-search-item">
+            <button
+              type="button"
+              className="nav-search-btn"
+              onClick={openSearch}
+              aria-label={text.searchLabel}
             >
+              {text.search}
+            </button>
+          </li>
+        </ul>
+      </nav>
+      {isSearchOpen && (
+        <div
+          className="search-modal-overlay"
+          onClick={closeSearch}
+          role="dialog"
+          aria-modal="true"
+          aria-label={text.searchLabel}
+        >
+          <div className="search-modal" onClick={(e) => e.stopPropagation()}>
+            <p className="search-modal__instruction">
+              {text.searchInstruction}
+            </p>
+            <form className="search-modal__form" onSubmit={handleSearchSubmit}>
               <input
-                className="find-text"
-                type="search"
-                name="find-text"
-                id="find-text"
+                className="search-modal__input"
+                type="text"
                 placeholder={text.searchPlaceholder}
-                aria-label={text.searchAria}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                autoFocus
+                aria-label={text.searchLabel}
               />
-              <button
-                className="search-btn"
-                type="submit"
-                aria-label={text.searchAria}
-              >
-                <FaSearch aria-hidden="true" />
-              </button>
+              <div className="search-modal__actions">
+                <button type="submit" className="search-modal__submit">
+                  {text.searchBtn}
+                </button>
+                <button
+                  type="button"
+                  className="search-modal__close"
+                  onClick={closeSearch}
+                >
+                  {text.searchClose}
+                </button>
+              </div>
             </form>
           </div>
-
-          <Link
-            className="nav-login-desktop"
-            to="/login"
-            onClick={closeMenuPanel}
-          >
-            {text.login}
-          </Link>
         </div>
-      </nav>
+      )}
     </>
   );
 }

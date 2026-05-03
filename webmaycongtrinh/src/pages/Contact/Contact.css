@@ -1,16 +1,39 @@
 .contact-page {
-  width: min(1200px, 100% - 2rem);
-  margin: calc(var(--site-nav-gap, 0px) + clamp(56px, 5vw, 108px)) auto 1rem;
+  width: min(1400px, 100% - 2rem);
+  margin: 0 auto 2rem;
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto 1fr;
   gap: 1.5rem;
 }
 
+/* Map chiếm full width hàng đầu */
 .contact-map {
+  grid-column: 1 / -1;
   border-radius: 14px;
   overflow: hidden;
   border: 1px solid #e6e6e6;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* Info và form nằm 2 cột cạnh nhau */
+.contact-info {
+  grid-column: 1 / 2;
+}
+
+.contact-form-wrap {
+  grid-column: 2 / 3;
+}
+
+@media (max-width: 767px) {
+  .contact-page {
+    grid-template-columns: 1fr;
+  }
+  .contact-map,
+  .contact-info,
+  .contact-form-wrap {
+    grid-column: 1 / -1;
+  }
 }
 
 .contact-map iframe {
@@ -175,23 +198,4 @@
 .contact-form button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
-}
-
-@media (min-width: 900px) {
-  .contact-page {
-    grid-template-columns: 1fr 1fr;
-    align-items: stretch;
-    gap: 2rem;
-  }
-
-  .contact-map {
-    grid-column: 1 / -1;
-  }
-
-  .contact-info,
-  .contact-form-wrap {
-    min-height: 320px;
-    display: flex;
-    flex-direction: column;
-  }
 }

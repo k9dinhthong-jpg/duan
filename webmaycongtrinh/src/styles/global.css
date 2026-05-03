@@ -1,15 +1,15 @@
 /* Style chung cho body,a ,ul,img,... */
 html {
-  width: var(--app-frame-width);
-  max-width: var(--viewport-safe-width);
+  width: 100%;
+  max-width: 100%;
   font-size: clamp(14px, 0.9vw, 18px);
   scroll-behavior: smooth;
-  overflow-x: clip;
+  overflow-x: hidden;
 }
 
 body {
-  width: var(--app-frame-width);
-  max-width: var(--viewport-safe-width);
+  width: 100%;
+  max-width: 100%;
   margin: 0;
   font-family: var(--font-family-base);
   font-size: var(--font-size-base);
@@ -18,20 +18,20 @@ body {
   letter-spacing: 0.01em;
   color: var(--color-text);
   background: var(--color-bg);
-  overflow-x: clip;
+  overflow-x: hidden;
 }
 
 #root {
-  width: var(--app-frame-width);
-  max-width: var(--viewport-safe-width);
+  width: 100%;
+  max-width: 100%;
   min-height: 100vh;
   margin-inline: auto;
 }
 
 #root > section,
 #root main {
-  width: var(--app-frame-width);
-  max-width: var(--viewport-safe-width);
+  width: 100%;
+  max-width: 100%;
 }
 
 h1,
@@ -126,14 +126,4 @@ td {
 ::selection {
   color: #ffffff;
   background: rgba(77, 93, 159, 0.85);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation: none !important;
-    transition: none !important;
-    scroll-behavior: auto !important;
-  }
 }

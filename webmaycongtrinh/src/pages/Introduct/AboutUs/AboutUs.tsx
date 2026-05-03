@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./AboutUs.css";
 import { toPublicPath } from "../../../utils/publicPath";
@@ -55,6 +55,18 @@ function AboutUs() {
   const phoneNumber = companyData.phone.trim();
   const emailAddress = companyData.email.trim();
 
+  const [navOffset, setNavOffset] = useState(0);
+
+  useEffect(() => {
+    function measure() {
+      const nav = document.querySelector<HTMLElement>(".site-nav");
+      setNavOffset(nav?.offsetHeight ?? 0);
+    }
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
   const websiteUrl = useMemo(
     () => ensureHttp(companyData.website),
     [companyData.website],
@@ -62,7 +74,10 @@ function AboutUs() {
 
   return (
     <div className="aboutus-page">
-      <section className="aboutus-banner">
+      <section
+        className="aboutus-banner"
+        style={{ paddingTop: navOffset + 48 }}
+      >
         <div className="aboutus-banner-content">
           <h1>
             {companyDisplayName ? `Về ${companyDisplayName}` : "Về chúng tôi"}

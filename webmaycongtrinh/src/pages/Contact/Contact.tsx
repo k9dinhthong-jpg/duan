@@ -102,6 +102,18 @@ function validateForm(values: ContactFormValues): ContactFormErrors {
 function Contact() {
   const [searchParams] = useSearchParams();
   const { companyInfo: companyData } = useCompanyInfo();
+  const [navOffset, setNavOffset] = useState(0);
+
+  useEffect(() => {
+    function measure() {
+      const nav = document.querySelector<HTMLElement>(".site-nav");
+      setNavOffset(nav?.offsetHeight ?? 0);
+    }
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
   const [formValues, setFormValues] = useState<ContactFormValues>({
     fullName: "",
     email: "",
@@ -272,7 +284,7 @@ function Contact() {
   };
 
   return (
-    <section className="contact-page">
+    <section className="contact-page" style={{ paddingTop: navOffset + 24 }}>
       <div className="contact-map">
         {mapSrc ? (
           <iframe

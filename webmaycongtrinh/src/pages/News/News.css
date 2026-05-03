@@ -179,22 +179,3 @@
   color: #374151;
   white-space: pre-line;
 }
-
-@media (max-width: 768px) {
-  .news-item {
-    grid-template-columns: 1fr;
-  }
-
-  .news-image {
-    height: 250px;
-  }
-
-  .news-content h2 {
-    font-size: 1.1rem;
-  }
-
-  .news-content p {
-    line-clamp: 2;
-    -webkit-line-clamp: 2;
-  }
-}

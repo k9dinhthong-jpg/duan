@@ -36,7 +36,7 @@
 }
 
 :root {
-  --viewport-safe-width: 100vw;
+  --viewport-safe-width: 100%;
   --app-frame-width: min(100%, var(--viewport-safe-width));
 
   --font-family-base:

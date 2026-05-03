@@ -1,5 +1,6 @@
-import { FaArrowRight } from "react-icons/fa";
+import { FaArrowRight, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 import { useMenuBrand } from "../../../context/MenuBrandContext";
 import {
   type ProductItemRecord,
@@ -35,6 +36,69 @@ function getImageSrc(product: ProductItemRecord): string {
   }
 
   return /^https?:\/\//i.test(image) ? image : toPublicPath(image);
+}
+
+function BrandCarousel({ children }: { children: React.ReactNode }) {
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [cardsPerView, setCardsPerView] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!gridRef.current) return;
+
+    function syncCardsPerView() {
+      const grid = gridRef.current;
+      if (!grid) return;
+      const width = grid.clientWidth;
+      setCardsPerView(width <= 767 ? 1 : null);
+    }
+
+    syncCardsPerView();
+
+    const observer = new ResizeObserver(syncCardsPerView);
+    observer.observe(gridRef.current);
+    window.addEventListener("resize", syncCardsPerView);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", syncCardsPerView);
+    };
+  }, []);
+
+  function scrollByPage(direction: -1 | 1) {
+    const grid = gridRef.current;
+    if (!grid) return;
+    grid.scrollBy({ left: direction * grid.clientWidth, behavior: "smooth" });
+  }
+
+  return (
+    <div className="product-brand__carousel">
+      <button
+        className="product-brand__arrow product-brand__arrow--prev"
+        onClick={() => scrollByPage(-1)}
+        aria-label="Sản phẩm trước"
+      >
+        <FaChevronLeft aria-hidden="true" />
+      </button>
+      <div
+        className={`product-brand__grid ${cardsPerView === 1 ? "is-single-card" : ""}`}
+        ref={gridRef}
+        style={
+          cardsPerView === 1
+            ? ({ "--cards-per-view": "1" } as React.CSSProperties)
+            : undefined
+        }
+      >
+        {children}
+      </div>
+      <button
+        className="product-brand__arrow product-brand__arrow--next"
+        onClick={() => scrollByPage(1)}
+        aria-label="Sản phẩm tiếp theo"
+      >
+        <FaChevronRight aria-hidden="true" />
+      </button>
+    </div>
+  );
 }
 
 function ProductSection() {
@@ -98,12 +162,12 @@ function ProductSection() {
               <h2 className="product-brand__title">{brand.name}</h2>
               <p className="product-brand__subtitle">SẢN PHẨM NỔI BẬT</p>
 
-              <div className="product-brand__grid">
+              <BrandCarousel>
                 {productsByBrand.length === 0 ? (
                   <p className="product-brand__empty">Chưa có sản phẩm</p>
                 ) : (
                   <>
-                    {productsByBrand.slice(0, 4).map((product) => {
+                    {productsByBrand.map((product) => {
                       const origin =
                         typeof product.origin === "string"
                           ? product.origin.trim()
@@ -137,7 +201,11 @@ function ProductSection() {
 
                           <div className="product-card__content">
                             <h3 className="product-card__title">
-                              {getProductTitle(product)}
+                              {(typeof product.name === "string" &&
+                              product.name.trim()
+                                ? `${product.name.trim()} ${getProductTitle(product)}`
+                                : getProductTitle(product)
+                              ).toUpperCase()}
                             </h3>
 
                             {productId ? (
@@ -186,7 +254,7 @@ function ProductSection() {
 
                             <Link
                               className="product-card__btn"
-                              to={`/product/${brand.brand.toLowerCase()}?productId=${encodeURIComponent(product.id)}&brandId=${encodeURIComponent(brand.brand)}`}
+                              to={`/product/detail?productId=${encodeURIComponent(product.id)}&brandId=${encodeURIComponent(brand.brand)}`}
                             >
                               Xem chi tiết
                             </Link>
@@ -196,7 +264,7 @@ function ProductSection() {
                     })}
                   </>
                 )}
-              </div>
+              </BrandCarousel>
 
               <Link
                 className="product-brand__all-btn"

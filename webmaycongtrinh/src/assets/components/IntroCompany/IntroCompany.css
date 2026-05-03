@@ -34,24 +34,6 @@
     opacity 3s ease;
 }
 
-@media (min-width: 1025px) {
-  .intro-company.is-centered .intro-company-inner {
-    width: 1500px;
-    margin-inline: auto;
-    grid-template-columns: 60% 35%;
-  }
-
-  .intro-company.is-centered .intro-company-left {
-    transform: translateX(0);
-    opacity: 1;
-  }
-
-  .intro-company.is-centered .intro-company-right {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
 .intro-company-title {
   margin: 0;
   width: 100%;
@@ -141,88 +123,142 @@
   display: block;
 }
 
-@media (max-width: 1024px) {
-  .intro-company-inner {
-    width: min(92vw, 980px);
-    margin-inline: auto;
-    gap: 2.5vw;
-  }
+.intro-company.is-centered .intro-company-left,
+.intro-company.is-centered .intro-company-right {
+  transform: translateX(0);
+  opacity: 1;
+}
 
-  .intro-company-title {
-    font-size: clamp(18px, 2vw, 24px);
-    line-height: 1.08;
+/* Desktop lon: >= 1400px */
+@media (min-width: 1400px) {
+  .intro-company-inner {
+    gap: 52px;
   }
 }
 
-@media (min-width: 768px) and (max-width: 1023px) {
+/* Laptop/Desktop thuong: 1200px - 1399px */
+@media (min-width: 1200px) and (max-width: 1399px) {
   .intro-company-inner {
-    width: min(92vw, 860px);
-    grid-template-columns: 57% 39%;
-    gap: 2.2vw;
-    margin-inline: auto;
-  }
-
-  .intro-company-left {
-    gap: 0.7vw;
-  }
-
-  .intro-company-title {
-    font-size: clamp(16px, 1.75vw, 22px);
-    line-height: 1.08;
-  }
-
-  .intro-company-desc {
-    font-size: clamp(15px, 1.25vw, 18px);
-    line-height: 1.5;
-  }
-
-  .intro-company-btn {
-    margin-top: 0.45vw;
-  }
-
-  .intro-company-right img {
-    height: clamp(225px, 24vw, 315px);
+    gap: 38px;
   }
 }
 
-@media (max-width: 768px) {
-  .intro-company {
-    padding: 8vw 0;
+/* Tablet ngang: 992px - 1199px */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .intro-company-inner {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.95fr);
+    gap: 28px;
   }
 
+  .intro-company-title {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
+}
+
+/* Tablet doc: 768px - 991px */
+@media (min-width: 768px) and (max-width: 991px) {
   .intro-company-inner {
-    width: min(94vw, 680px);
-    margin-inline: auto;
     grid-template-columns: 1fr;
-    gap: 5vw;
+    gap: 18px;
   }
 
-  .intro-company-left {
-    justify-items: center;
-    text-align: center;
-    gap: 2.5vw;
+  .intro-company-left,
+  .intro-company-right {
+    transform: translateX(0);
+    opacity: 1;
+    transition-duration: 0.8s;
   }
 
   .intro-company-title {
-    font-size: clamp(14px, 4.2vw, 20px);
-    line-height: 1.08;
-    letter-spacing: 0.01em;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
   }
 
   .intro-company-btn {
-    width: fit-content;
+    justify-self: center;
+  }
+}
+
+/* Mobile lon: 576px - 767px */
+@media (min-width: 576px) and (max-width: 767px) {
+  .intro-company-inner {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .intro-company-left,
+  .intro-company-right {
+    transform: translateX(0);
+    opacity: 1;
+    transition-duration: 0.7s;
+  }
+
+  .intro-company-title {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    font-size: clamp(20px, 4.2vw, 24px);
+  }
+
+  .intro-company-btn {
     justify-self: center;
   }
 
   .intro-company-btn-label {
-    padding: 2.2vw 4vw;
+    min-width: 160px;
+    padding: 10px 16px;
   }
 
   .intro-company-btn-icon {
-    width: 10vw;
+    width: 44px;
+  }
+}
+
+/* Mobile nho: <= 575px */
+@media (max-width: 575px) {
+  .intro-company-inner {
+    grid-template-columns: 1fr;
+    gap: 14px;
   }
 
-  .intro-company-right img {
-    height: 41.25vw;
+  .intro-company-left,
+  .intro-company-right {
+    transform: translateX(0);
+    opacity: 1;
+    transition-duration: 0.6s;
+  }
+
+  .intro-company-left {
+    gap: 10px;
+  }
+
+  .intro-company-title {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    font-size: clamp(18px, 5.3vw, 21px);
+  }
+
+  .intro-company-desc {
+    font-size: clamp(14px, 3.8vw, 16px);
+  }
+
+  .intro-company-btn {
+    justify-self: center;
+    width: 100%;
+    max-width: 260px;
+  }
+
+  .intro-company-btn-label {
+    min-width: 0;
+    width: 100%;
+    padding: 10px 12px;
+  }
+
+  .intro-company-btn-icon {
+    width: 44px;
   }
 }

@@ -16,6 +16,7 @@ export type ProductItem = {
   status: string;
   badge: string;
   image: string;
+  link_image_product: string;
   is_active: 0 | 1;
   created_at: string;
 };
@@ -34,6 +35,7 @@ export type ProductPayload = {
   status: string;
   badge: string;
   image: string;
+  link_image_product: string;
   is_active: 0 | 1;
 };
 
@@ -89,9 +91,25 @@ function getAuthToken(): string {
   return localStorage.getItem("adminmct:token") ?? "";
 }
 
+function readStringOrFallback(value: unknown, fallback: string): string {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed || fallback;
+  }
+
+  if (value === null || typeof value === "undefined") {
+    return fallback;
+  }
+
+  const normalized = String(value).trim();
+  return normalized || fallback;
+}
+
 function normalizeProductRow(raw: unknown): ProductItem {
   const item = (raw ?? {}) as Record<string, unknown>;
   const brandRaw = item.brand_id ?? item.brandId;
+  const createdAtValue =
+    typeof item.created_at !== "undefined" ? item.created_at : item.createdAt;
   return {
     id: String(item.id ?? ""),
     brand_id:
@@ -110,8 +128,9 @@ function normalizeProductRow(raw: unknown): ProductItem {
     status: String(item.status ?? ""),
     badge: String(item.badge ?? ""),
     image: String(item.image ?? ""),
+    link_image_product: String(item.link_image_product ?? ""),
     is_active: Number(item.is_active) === 0 ? 0 : 1,
-    created_at: String(item.created_at ?? item.createdAt ?? getNowDateTime()),
+    created_at: readStringOrFallback(createdAtValue, getNowDateTime()),
   };
 }
 
@@ -286,6 +305,7 @@ export function ProductContextProvider({
       status: payload.status.trim(),
       badge: payload.badge.trim(),
       image: payload.image.trim(),
+      link_image_product: payload.link_image_product.trim(),
       is_active: payload.is_active,
     });
 
@@ -321,6 +341,7 @@ export function ProductContextProvider({
         status: payload.status.trim(),
         badge: payload.badge.trim(),
         image: payload.image.trim(),
+        link_image_product: payload.link_image_product.trim(),
         is_active: payload.is_active,
       },
     );

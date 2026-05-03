@@ -39,6 +39,20 @@ select {
 a {
   text-decoration: none;
   color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid rgba(95, 108, 163, 0.6);
+  outline-offset: 2px;
 }
 
 ul,

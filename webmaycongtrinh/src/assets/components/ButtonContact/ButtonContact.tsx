@@ -4,7 +4,7 @@ import {
   FaTiktok,
   FaWeixin,
 } from "react-icons/fa";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import iconZalo from "./img/Zalo.svg.png";
 import "./ButtonContact.css";
 import { toPublicPath } from "../../../utils/publicPath";
@@ -24,6 +24,7 @@ function normalizeUrl(value?: string) {
 function ButtonContact() {
   const { companyInfo: companyContact } = useCompanyInfo();
   const [isCompactOpen, setIsCompactOpen] = useState(false);
+  const compactRef = useRef<HTMLDivElement>(null);
 
   const zaloUrl = companyContact.zalo ?? "";
   const telegramUrl = companyContact.telegram ?? "";
@@ -33,7 +34,7 @@ function ButtonContact() {
 
   useEffect(() => {
     function closeCompactOnDesktop() {
-      if (window.innerWidth > 1024) {
+      if (window.innerWidth > 767) {
         setIsCompactOpen(false);
       }
     }
@@ -43,6 +44,24 @@ function ButtonContact() {
       window.removeEventListener("resize", closeCompactOnDesktop);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isCompactOpen) return;
+
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        compactRef.current &&
+        !compactRef.current.contains(e.target as Node)
+      ) {
+        setIsCompactOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isCompactOpen]);
 
   return (
     <div className="contact-fixed">
@@ -103,7 +122,7 @@ function ButtonContact() {
         )}
       </div>
 
-      <div className="contact-compact">
+      <div className="contact-compact" ref={compactRef}>
         <button
           type="button"
           className="contact-menu-toggle"

@@ -128,25 +128,3 @@
 .welcome-popup-btn:hover {
   transform: translateY(-1px);
 }
-
-@media (max-width: 768px) {
-  .welcome-popup-card {
-    border-radius: 14px;
-    padding: 18px 16px;
-  }
-
-  .welcome-popup-close {
-    width: 32px;
-    height: 32px;
-  }
-
-  .welcome-popup-actions {
-    margin-top: 16px;
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-
-  .welcome-popup-btn {
-    width: 100%;
-  }
-}

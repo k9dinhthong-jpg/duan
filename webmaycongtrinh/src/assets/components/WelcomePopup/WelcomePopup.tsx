@@ -5,12 +5,7 @@ import "./WelcomePopup.css";
 const storageKey = "welcome-popup-last-seen";
 const hideDurationMs = 1 * 60 * 60 * 1000;
 
-const sponsors = [
-  "Máy Công Trình Đài Soạn",
-  "Máy Công Trình Thảo Vân",
-  "Công ty Xây Dựng DEF",
-  "Công ty Xây Dựng GHI",
-];
+const sponsors = ["Máy Công Trình Đài Soạn"];
 
 function shouldShowPopup() {
   try {
